@@ -5,7 +5,7 @@
   display: flex;
   flex-direction: column;
   padding: var(--s-3) var(--s-4) calc(var(--s-4) + env(safe-area-inset-bottom));
-  gap: var(--s-3);
+  gap: var(--s-4);
 }
 
 /* ── header ── */
@@ -50,10 +50,11 @@
   color: var(--text-3);
   padding: var(--s-2) var(--s-3);
   border-radius: var(--radius-sm);
+  transition: background 0.15s, color 0.15s;
 }
 .sess__end--armed {
   color: var(--accent-ink);
-  background: var(--accent);
+  background: var(--feel-2);
 }
 
 /* ── exercise ── */
@@ -72,11 +73,6 @@
   font-weight: 600;
   color: var(--text-2);
 }
-.sess__prev {
-  margin: 2px 0 0;
-  font-size: var(--t-sm);
-  color: var(--text-3);
-}
 .sess__cue {
   margin: 2px 0 0;
   font-size: var(--t-sm);
@@ -84,23 +80,26 @@
   color: var(--text-3);
 }
 
-/* ── set list ── */
+/* ── set list — заполняет вертикаль ── */
 .setlist {
   list-style: none;
   margin: 0;
   padding: 0;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--s-1);
+  gap: var(--s-2);
+  justify-content: center;
 }
 .setrow {
   display: flex;
   align-items: center;
   gap: var(--s-3);
-  padding: var(--s-2) var(--s-3);
-  border-radius: var(--radius-sm);
+  padding: var(--s-3);
+  border-radius: var(--radius);
   border: 1px solid var(--line);
-  min-height: 40px;
+  min-height: 52px;
+  transition: border-color 0.15s, background 0.15s;
 }
 .setrow--done {
   cursor: pointer;
@@ -112,6 +111,18 @@
 .setrow--edit {
   border-color: var(--feel-1);
 }
+.setrow--flash {
+  animation: flash 0.6s ease-out;
+}
+@keyframes flash {
+  0% {
+    background: color-mix(in srgb, var(--feel-0) 35%, transparent);
+    border-color: var(--feel-0);
+  }
+  100% {
+    background: transparent;
+  }
+}
 .setrow__n {
   font-size: var(--t-xs);
   color: var(--text-3);
@@ -121,17 +132,24 @@
   font-size: var(--t-md);
   font-weight: 600;
 }
+.setrow__val--now {
+  color: var(--accent);
+}
 .setrow__val--pending {
   color: var(--text-3);
   font-weight: 400;
 }
+.setrow__was {
+  margin-left: auto;
+  font-size: var(--t-xs);
+  color: var(--text-3);
+}
+
 /* ── input dock ── */
 .sess__input {
-  margin-top: auto;
   display: flex;
   flex-direction: column;
   gap: var(--s-3);
-  padding-top: var(--s-3);
 }
 .sess__steppers {
   display: flex;
@@ -146,8 +164,10 @@
   font-size: var(--t-lg);
   font-weight: 700;
   letter-spacing: -0.01em;
+  transition: transform 0.09s ease-out;
 }
 .sess__log:active {
+  transform: scale(0.975);
   filter: brightness(0.92);
 }
 .sess__finish {
@@ -157,4 +177,15 @@
   color: var(--text-2);
   font-size: var(--t-md);
   font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .setrow,
+  .sess__log,
+  .sess__end {
+    transition: none;
+  }
+  .setrow--flash {
+    animation: none;
+  }
 }

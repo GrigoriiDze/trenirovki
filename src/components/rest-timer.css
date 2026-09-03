@@ -4,6 +4,21 @@
   border-radius: var(--radius);
   overflow: hidden;
   background: var(--surface);
+  animation: rest-in 0.22s ease-out;
+}
+@keyframes rest-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rest {
+    animation: none;
+  }
+  .rest__bar {
+    transition: none;
+  }
 }
 .rest__bar {
   position: absolute;

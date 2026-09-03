@@ -24,6 +24,7 @@
   background: var(--surface-2);
   touch-action: none;
   user-select: none;
+  transition: background 0.12s;
 }
 .stepper__btn:active {
   background: var(--accent-soft);
@@ -36,9 +37,21 @@
   gap: 3px;
   font-size: 24px;
   font-weight: 600;
+  touch-action: none;
+  user-select: none;
+  cursor: ew-resize;
+}
+.stepper__value:active {
+  color: var(--accent);
 }
 .stepper__unit {
   font-size: var(--t-sm);
   color: var(--text-3);
   font-weight: 400;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stepper__btn {
+    transition: none;
+  }
 }

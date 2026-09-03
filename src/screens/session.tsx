@@ -28,6 +28,7 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
   const [resting, setResting] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const [flash, setFlash] = useState<number | null>(null);
 
   const slot = slots[exIdx]!;
   const ex = exerciseById.get(slot.exerciseId)!;
@@ -88,12 +89,16 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
   );
 
   async function commit() {
+    navigator.vibrate?.(14);
     if (editing) {
       await editSet(editing, { weight, reps });
       setEditing(null);
       return;
     }
+    const idx = exLogs.length;
     await logSet(session.id, slot.exerciseId, { weight, reps, backFeel: null, rir: null });
+    setFlash(idx);
+    window.setTimeout(() => setFlash(null), 600);
     if (ex.restSec > 0) setResting(true);
   }
 
@@ -144,11 +149,6 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
           {targetStr}
           {slot.perSide ? " · каждая сторона" : ""}
         </p>
-        {prev && prev.length > 0 ? (
-          <p class="sess__prev num">
-            было: {prev.map((p) => formatSet(load, p.weight, p.reps)).join(" · ")}
-          </p>
-        ) : null}
         <p class="sess__cue">{ex.cue}</p>
       </div>
 
@@ -156,11 +156,12 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
         {Array.from({ length: Math.max(target, done) }).map((_, i) => {
           const log = exLogs[i];
           const isCurrent = !log && i === done && !editing;
+          const wasHint = prev?.[i] ? formatSet(load, prev[i]!.weight, prev[i]!.reps) : null;
           return (
             <li
               class={`setrow ${log ? "setrow--done" : ""} ${isCurrent ? "setrow--now" : ""} ${
                 editing && log?.id === editing ? "setrow--edit" : ""
-              }`}
+              } ${flash === i ? "setrow--flash" : ""}`}
               key={log?.id ?? `p${i}`}
               onClick={
                 log
@@ -176,9 +177,14 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
               <span class="setrow__n num">{i + 1}</span>
               {log ? (
                 <span class="setrow__val num">{formatSet(load, log.weight, log.reps)}</span>
+              ) : isCurrent ? (
+                <span class="setrow__val setrow__val--now num">
+                  {formatSet(load, weight, reps)}
+                </span>
               ) : (
-                <span class="setrow__val setrow__val--pending">{isCurrent ? "сейчас" : "—"}</span>
+                <span class="setrow__val setrow__val--pending">—</span>
               )}
+              {wasHint && !log ? <span class="setrow__was num">было {wasHint}</span> : null}
             </li>
           );
         })}

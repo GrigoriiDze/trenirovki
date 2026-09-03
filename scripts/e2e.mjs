@@ -81,8 +81,8 @@ await page.waitForSelector(".today");
 await page.click(".daychip:has-text('A')");
 await page.click(".today__cta .btn--primary");
 await page.waitForSelector(".sess");
-const prevLine = await page.locator(".sess__prev").first().textContent().catch(() => null);
-step(9, `«было» на 2-й тренировке: ${prevLine ? JSON.stringify(prevLine.trim()) : "НЕТ"}`);
+const wasHints = await page.locator(".setrow__was").count();
+step(9, `«было» подсказок на 2-й тренировке: ${wasHints}`);
 await page.click(".sess__x"); // выйти, не записывая
 
 // дневник
