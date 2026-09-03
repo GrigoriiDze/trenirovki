@@ -74,10 +74,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stepper__row,
-  .stepper__btn,
-  .stepper__value,
-  .stepper__grip {
-    transition: none;
+  .stepper__btn:active {
+    transform: none;
   }
 }

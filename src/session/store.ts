@@ -6,6 +6,10 @@ import { db, type DayCode, type Session, type SetLog } from "~/db/schema";
 import { putRow, patchRow } from "~/db/write";
 
 export async function startSession(day: DayCode, versionId: string): Promise<Session> {
+  // выкинуть брошенную пустую сессию, если была
+  const stale = await openSession();
+  if (stale) await exitSession(stale.id);
+
   const s: Omit<Session, "updatedAt" | "deleted"> = {
     id: crypto.randomUUID(),
     versionId,
@@ -23,6 +27,13 @@ export async function openSession(): Promise<Session | undefined> {
 
 export async function finishSession(id: string): Promise<void> {
   await patchRow("sessions", id, { finishedAt: Date.now() });
+}
+
+/** Выход из сессии без единого подхода = отмена (мягкое удаление).
+ *  Если что-то записано — оставляем открытой («Продолжить»). */
+export async function exitSession(id: string): Promise<void> {
+  const n = await db.setLogs.where("sessionId").equals(id).filter((l) => !l.deleted).count();
+  if (n === 0) await patchRow("sessions", id, { deleted: true });
 }
 
 /** Записать подход. setNumber считается сам по уже записанным в этой сессии. */

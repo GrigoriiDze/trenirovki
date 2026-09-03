@@ -131,6 +131,9 @@ button {
   cursor: pointer;
   border: 0;
   background: none;
+  touch-action: manipulation; /* без 300мс задержки на iOS */
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
@@ -156,9 +159,12 @@ button {
   font-size: var(--t-sm);
 }
 
+/* «Уменьшить движение» гасит крупные декоративные анимации (выезды,
+   пульсации-подскоки) — они прописаны в компонентах отдельно. Короткий
+   тактильный отклик на нажатие (100–150 мс смена цвета/масштаба) —
+   это не «движение», а обратная связь интерфейса, его оставляем. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

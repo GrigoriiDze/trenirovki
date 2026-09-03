@@ -16,9 +16,6 @@
   .rest {
     animation: none;
   }
-  .rest__bar {
-    transition: none;
-  }
 }
 .rest__bar {
   position: absolute;

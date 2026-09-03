@@ -112,16 +112,12 @@
   border-color: var(--feel-1);
 }
 .setrow--flash {
-  animation: flash 0.7s cubic-bezier(0.2, 0.9, 0.3, 1);
+  animation: flash 0.7s ease-out;
 }
 @keyframes flash {
   0% {
-    background: color-mix(in srgb, var(--feel-0) 45%, transparent);
+    background: color-mix(in srgb, var(--feel-0) 48%, transparent);
     border-color: var(--feel-0);
-    transform: scale(1.03);
-  }
-  40% {
-    transform: scale(1);
   }
   100% {
     background: transparent;
@@ -186,12 +182,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .setrow,
-  .sess__log,
-  .sess__end {
-    transition: none;
-  }
-  .setrow--flash {
-    animation: none;
+  .sess__log:active {
+    transform: none;
   }
 }

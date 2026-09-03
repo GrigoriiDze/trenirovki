@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { db, type Exercise, type ProgramSlot, type Session as Sess } from "~/db/schema";
 import { useLive } from "~/lib/live";
 import { formatSet } from "~/lib/format-set";
-import { editSet, finishSession, logSet } from "~/session/store";
+import { editSet, exitSession, finishSession, logSet } from "~/session/store";
 import { lastSetsFor } from "~/session/history";
 import { haptic } from "~/lib/haptic";
 import { Stepper } from "~/components/stepper";
@@ -106,7 +106,14 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
   return (
     <main class="sess">
       <header class="sess__top">
-        <button class="sess__x" onClick={onExit} aria-label="На главный">
+        <button
+          class="sess__x"
+          onClick={() => {
+            void exitSession(session.id);
+            onExit();
+          }}
+          aria-label="На главный"
+        >
           ✕
         </button>
         <div class="sess__nav">

@@ -1,12 +1,10 @@
 /* Прогон потока тренировки в браузере: unlock → день → старт → запись
-   подхода → таймер → завершение → итог + синк. Чистит за собой в Neon.
-   Скриншоты в shots/e2e-*. Требует `npm run dev` и `npm run dev:api`.
-   `npm run test:e2e` */
+   подхода → таймер → завершение → итог. Синк ЗАГЛУШЕН — тест изолирован,
+   прод-Neon не трогает. Требует `npm run dev`. `npm run test:e2e` */
 
 import { chromium } from "playwright";
-import { neon } from "@neondatabase/serverless";
 
-const TOKEN = process.env.APP_TOKEN;
+const TOKEN = process.env.APP_TOKEN ?? "e2e";
 const BASE = "http://localhost:5173";
 const OUT = `${import.meta.dirname}/../shots`;
 const SUF = process.argv.includes("--light") ? ".light" : ".dark";
@@ -15,12 +13,21 @@ const SCHEME = process.argv.includes("--light") ? "light" : "dark";
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, colorScheme: SCHEME });
 const page = await ctx.newPage();
+
+// заглушка синка: код принимается, данные никуда не уходят и не приходят
+await page.route("**/api/sync", (route) =>
+  route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ now: Date.now(), pull: {} }),
+  }),
+);
+
 const errs = [];
 page.on("pageerror", (e) => errs.push("pageerror: " + e.message));
 page.on("console", (m) => m.type() === "error" && errs.push("console: " + m.text()));
 
 const step = (n, msg) => console.log(`${n}. ${msg}`);
-const testStart = Date.now(); // чистим только сессии, созданные в этом прогоне
 
 await page.goto(BASE, { waitUntil: "networkidle" });
 await page.fill(".unlock__input", TOKEN);
@@ -101,28 +108,6 @@ await page.locator(".drow__head").first().click();
 await page.waitForSelector(".drow__body");
 await page.screenshot({ path: `${OUT}/e2e-diary${SUF}.png` });
 
-// дать синку уехать, потом закрыть
-await page.evaluate(() => window.dispatchEvent(new Event("online")));
-await page.waitForTimeout(2000);
 await browser.close();
-
-// уборка: всё, что создано в этом прогоне (startedAt >= testStart).
-// e2e бьёт по прод-Neon — до отдельной ветки БД чистим по времени, с ретраем на таймин синка.
-if (process.env.DATABASE_URL) {
-  const sql = neon(process.env.DATABASE_URL);
-  let removed = 0;
-  for (let i = 0; i < 5; i++) {
-    const rows = await sql`select id from sessions where started_at >= ${testStart}`;
-    if (rows.length === 0) break;
-    for (const { id } of rows) {
-      await sql`delete from set_logs where session_id = ${id}`;
-      await sql`delete from sessions where id = ${id}`;
-      removed++;
-    }
-    await new Promise((r) => setTimeout(r, 1000));
-  }
-  step(11, `убрано из Neon: ${removed} тестовых сесси(й)`);
-}
-
 console.log(errs.length ? "ОШИБКИ:\n" + errs.join("\n") : "✓ ошибок консоли нет");
 process.exit(errs.length ? 1 : 0);
