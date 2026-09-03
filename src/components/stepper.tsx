@@ -1,4 +1,5 @@
-import { useRef } from "preact/hooks";
+import { useRef, useState } from "preact/hooks";
+import { haptic } from "~/lib/haptic";
 import "./stepper.css";
 
 interface Props {
@@ -11,15 +12,17 @@ interface Props {
 }
 
 const round = (n: number) => Math.round(n * 100) / 100;
-const tick = () => navigator.vibrate?.(4);
+const tick = () => haptic(4);
 
 /** Ввод без клавиатуры: ±кнопки (удержание = автоповтор с ускорением) +
- *  горизонтальное перетаскивание по числу (быстрая крупная правка). */
+ *  протаскивание пальцем по числу влево-вправо. */
 export function Stepper({ label, value, step, min = 0, unit, onChange }: Props) {
   const timer = useRef<number>();
   const drag = useRef<{ x: number; v: number } | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   const hold = (dir: number) => {
+    haptic(6);
     let acc = value;
     let delay = 300;
     const run = () => {
@@ -35,6 +38,8 @@ export function Stepper({ label, value, step, min = 0, unit, onChange }: Props) 
 
   const dragStart = (e: PointerEvent) => {
     drag.current = { x: e.clientX, v: value };
+    setDragging(true);
+    haptic(6);
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
   const dragMove = (e: PointerEvent) => {
@@ -48,10 +53,11 @@ export function Stepper({ label, value, step, min = 0, unit, onChange }: Props) 
   };
   const dragEnd = () => {
     drag.current = null;
+    setDragging(false);
   };
 
   return (
-    <div class="stepper">
+    <div class={`stepper ${dragging ? "stepper--drag" : ""}`}>
       <span class="stepper__label label">{label}</span>
       <div class="stepper__row">
         <button
@@ -73,6 +79,7 @@ export function Stepper({ label, value, step, min = 0, unit, onChange }: Props) 
         >
           {value}
           {unit ? <span class="stepper__unit">{unit}</span> : null}
+          <span class="stepper__grip" aria-hidden="true" />
         </span>
         <button
           class="stepper__btn"

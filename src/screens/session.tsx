@@ -4,6 +4,7 @@ import { useLive } from "~/lib/live";
 import { formatSet } from "~/lib/format-set";
 import { editSet, finishSession, logSet } from "~/session/store";
 import { lastSetsFor } from "~/session/history";
+import { haptic } from "~/lib/haptic";
 import { Stepper } from "~/components/stepper";
 import { RestTimer } from "~/components/rest-timer";
 import "./session.css";
@@ -89,7 +90,7 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
   );
 
   async function commit() {
-    navigator.vibrate?.(14);
+    haptic(16);
     if (editing) {
       await editSet(editing, { weight, reps });
       setEditing(null);

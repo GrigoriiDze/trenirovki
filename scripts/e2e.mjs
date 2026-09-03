@@ -85,7 +85,12 @@ await page.click(".today__cta .btn--primary");
 await page.waitForSelector(".sess");
 const wasHints = await page.locator(".setrow__was").count();
 step(9, `«было» подсказок на 2-й тренировке: ${wasHints}`);
-await page.click(".sess__x"); // выйти, не записывая
+// завершаем и эту (чистая завершённая сессия — уберём вместе с первой)
+await page.click(".sess__end");
+await page.click(".sess__end");
+await page.waitForSelector(".sum");
+await page.click(".sum .btn--primary");
+await page.waitForSelector(".home");
 
 // дневник
 await page.click(".tile--on");
@@ -96,30 +101,27 @@ await page.locator(".drow__head").first().click();
 await page.waitForSelector(".drow__body");
 await page.screenshot({ path: `${OUT}/e2e-diary${SUF}.png` });
 
-const ids = await page.evaluate(
-  (since) =>
-    new Promise((res) => {
-      const r = indexedDB.open("trenirovki");
-      r.onsuccess = () => {
-        const all = r.result.transaction("sessions", "readonly").objectStore("sessions").getAll();
-        all.onsuccess = () =>
-          res(all.result.filter((s) => s.startedAt >= since).map((s) => s.id));
-      };
-    }),
-  testStart,
-);
+// дать синку уехать, потом закрыть
 await page.evaluate(() => window.dispatchEvent(new Event("online")));
-await page.waitForTimeout(1500);
+await page.waitForTimeout(2000);
 await browser.close();
 
-// чистим ТОЛЬКО сессии этого прогона (startedAt >= testStart) — чужие не трогаем
-if (ids.length && process.env.DATABASE_URL) {
+// уборка: всё, что создано в этом прогоне (startedAt >= testStart).
+// e2e бьёт по прод-Neon — до отдельной ветки БД чистим по времени, с ретраем на таймин синка.
+if (process.env.DATABASE_URL) {
   const sql = neon(process.env.DATABASE_URL);
-  for (const id of ids) {
-    await sql`delete from set_logs where session_id = ${id}`;
-    await sql`delete from sessions where id = ${id}`;
+  let removed = 0;
+  for (let i = 0; i < 5; i++) {
+    const rows = await sql`select id from sessions where started_at >= ${testStart}`;
+    if (rows.length === 0) break;
+    for (const { id } of rows) {
+      await sql`delete from set_logs where session_id = ${id}`;
+      await sql`delete from sessions where id = ${id}`;
+      removed++;
+    }
+    await new Promise((r) => setTimeout(r, 1000));
   }
-  step(11, `убрано из Neon: ${ids.length} тестовых сесси(й)`);
+  step(11, `убрано из Neon: ${removed} тестовых сесси(й)`);
 }
 
 console.log(errs.length ? "ОШИБКИ:\n" + errs.join("\n") : "✓ ошибок консоли нет");

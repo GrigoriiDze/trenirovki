@@ -15,6 +15,11 @@
   border: 1px solid var(--line-2);
   border-radius: var(--radius);
   overflow: hidden;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.stepper--drag .stepper__row {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .stepper__btn {
   min-height: 56px;
@@ -24,13 +29,15 @@
   background: var(--surface-2);
   touch-action: none;
   user-select: none;
-  transition: background 0.12s;
+  transition: background 0.1s, transform 0.08s;
 }
 .stepper__btn:active {
   background: var(--accent-soft);
   color: var(--accent);
+  transform: scale(0.92);
 }
 .stepper__value {
+  position: relative;
   display: flex;
   align-items: baseline;
   justify-content: center;
@@ -40,8 +47,9 @@
   touch-action: none;
   user-select: none;
   cursor: ew-resize;
+  transition: color 0.1s;
 }
-.stepper__value:active {
+.stepper--drag .stepper__value {
   color: var(--accent);
 }
 .stepper__unit {
@@ -49,9 +57,27 @@
   color: var(--text-3);
   font-weight: 400;
 }
+/* подсказка «можно тащить» — короткая полоска-грип под числом */
+.stepper__grip {
+  position: absolute;
+  left: 50%;
+  bottom: 7px;
+  width: 22px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--line-2);
+  transform: translateX(-50%);
+}
+.stepper--drag .stepper__grip {
+  background: var(--accent);
+  width: 34px;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .stepper__btn {
+  .stepper__row,
+  .stepper__btn,
+  .stepper__value,
+  .stepper__grip {
     transition: none;
   }
 }
