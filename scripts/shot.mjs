@@ -1,6 +1,8 @@
 /* Скриншот-харнесс. `npm run shot` — поднимает dev-сервер Vite, снимает
    ключевые экраны в мобильном вьюпорте (light + dark), кладёт PNG в shots/.
-   Смотреть глазами перед тем, как сказать «готово» (см. CLAUDE.md). */
+   Смотреть глазами перед тем, как сказать «готово» (см. CLAUDE.md).
+
+   `npm run shot -- https://…` — снять внешний URL вместо локального сервера. */
 
 import { mkdir, rm } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -20,9 +22,16 @@ async function main() {
   await rm(OUT, { recursive: true, force: true });
   await mkdir(OUT, { recursive: true });
 
-  const server = await createServer({ server: { port: 5199, strictPort: true } });
-  await server.listen();
-  const base = `http://localhost:5199`;
+  const extern = process.argv[2];
+  let server = null;
+  let base;
+  if (extern) {
+    base = extern.replace(/\/$/, "");
+  } else {
+    server = await createServer({ server: { port: 5199, strictPort: true } });
+    await server.listen();
+    base = `http://localhost:5199`;
+  }
 
   const browser = await chromium.launch();
   let failed = false;
@@ -56,7 +65,7 @@ async function main() {
   }
 
   await browser.close();
-  await server.close();
+  if (server) await server.close();
 
   if (failed) {
     console.error("\n✗ были ошибки в консоли страницы — смотри выше");
