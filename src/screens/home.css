@@ -86,3 +86,18 @@
   text-transform: uppercase;
   color: var(--text-3);
 }
+
+.home__sync {
+  margin: 0;
+  font-size: var(--t-xs);
+  letter-spacing: 0.03em;
+}
+.home__sync--ok {
+  color: var(--text-3);
+}
+.home__sync--wait {
+  color: var(--feel-1);
+}
+.home__sync--bad {
+  color: var(--feel-2);
+}

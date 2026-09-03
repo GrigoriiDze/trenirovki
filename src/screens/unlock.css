@@ -1,0 +1,55 @@
+.unlock {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: var(--s-5);
+}
+.unlock__box {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.unlock__box h1 {
+  font-size: var(--t-lg);
+}
+.unlock__hint {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--text-3);
+  line-height: 1.5;
+}
+.unlock__input {
+  min-height: var(--tap);
+  padding: 0 var(--s-3);
+  font-size: var(--t-md);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  letter-spacing: 0.04em;
+}
+.unlock__input::placeholder {
+  color: var(--text-3);
+  letter-spacing: normal;
+}
+.unlock__err {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--feel-2);
+}
+.unlock .btn {
+  min-height: var(--tap);
+  border-radius: var(--radius);
+  font-size: var(--t-md);
+  font-weight: 600;
+}
+.unlock .btn--primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.unlock .btn--primary:disabled {
+  background: var(--surface-2);
+  color: var(--text-3);
+}

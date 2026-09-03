@@ -11,11 +11,14 @@ import { chromium } from "playwright";
 
 const OUT = fileURLToPath(new URL("../shots", import.meta.url));
 
-// [имя файла, путь]. SPA без роутера — экран задаётся ?screen=
+// [имя файла, путь, нужен ли код доступа]. SPA без роутера — экран задаётся ?screen=
 const ROUTES = [
-  ["home", "/"],
-  ["today", "/?screen=today"],
+  ["unlock", "/", false],
+  ["home", "/", true],
+  ["today", "/?screen=today", true],
 ];
+
+const TOKEN = process.env.APP_TOKEN ?? null;
 
 const VIEWPORT = { width: 390, height: 844 }; // iPhone 13/14
 
@@ -55,9 +58,18 @@ async function main() {
       console.error(`  [pageerror] ${e.message}`);
     });
 
-    for (const [name, path] of ROUTES) {
+    for (const [name, path, needsToken] of ROUTES) {
+      if (needsToken && !TOKEN) continue; // нет .env — снимаем только unlock
+      await page.goto(`${base}${path}`, { waitUntil: "domcontentloaded" });
+      await page.evaluate(
+        ([tok, need]) => {
+          if (need && tok) localStorage.setItem("trenirovki:token", tok);
+          else localStorage.removeItem("trenirovki:token");
+        },
+        [TOKEN, needsToken],
+      );
       await page.goto(`${base}${path}`, { waitUntil: "networkidle" });
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
       const file = `${OUT}/${name}.${scheme}.png`;
       await page.screenshot({ path: file, fullPage: true });
       console.log(`  ${file.replace(OUT + "/", "shots/")}`);

@@ -6,10 +6,13 @@
 
 import type { DayCode, Exercise, Origin } from "~/db/schema";
 
+/** Упражнение без полей синхронизации — их проставит seed. */
+type ExerciseSeed = Omit<Exercise, "updatedAt" | "deleted" | "gifUrl"> & { gifUrl?: string | null };
+
 export const PROGRAM_VERSION_ID = "v1";
 export const PROGRAM_NAME = "Full body 1";
 
-export const EXERCISES: Exercise[] = [
+export const EXERCISES: ExerciseSeed[] = [
   // --- кор ---
   {
     id: "dead-bug",

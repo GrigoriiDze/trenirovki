@@ -1,10 +1,12 @@
 import type { DayCode } from "~/db/schema";
+import type { SyncState } from "~/sync/engine";
 import "./home.css";
 
 interface Props {
   day: DayCode;
   dayTitle: string;
   exerciseCount: number;
+  sync: SyncState;
   onOpenToday: () => void;
 }
 
@@ -14,7 +16,16 @@ const TODAY_FMT = new Intl.DateTimeFormat("ru-RU", {
   month: "long",
 });
 
-export function Home({ day, dayTitle, exerciseCount, onOpenToday }: Props) {
+function syncLabel(s: SyncState): { text: string; tone: "ok" | "wait" | "bad" } {
+  if (s.status === "bad-token") return { text: "код отклонён", tone: "bad" };
+  if (s.pending > 0) return { text: `${s.pending} ждут сети`, tone: "wait" };
+  if (s.status === "syncing") return { text: "синхронизация…", tone: "wait" };
+  if (s.status === "offline") return { text: "оффлайн", tone: "wait" };
+  return { text: "сохранено", tone: "ok" };
+}
+
+export function Home({ day, dayTitle, exerciseCount, sync, onOpenToday }: Props) {
+  const sl = syncLabel(sync);
   return (
     <main class="home">
       <header class="home__head">
@@ -44,6 +55,8 @@ export function Home({ day, dayTitle, exerciseCount, onOpenToday }: Props) {
           <span class="tile__soon">скоро</span>
         </div>
       </nav>
+
+      <p class={`home__sync home__sync--${sl.tone}`}>{sl.text}</p>
     </main>
   );
 }

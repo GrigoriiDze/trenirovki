@@ -21,9 +21,11 @@ PWA: зайти с телефона, посмотреть программу, в
 ## Хранение: local-first + Neon
 
 - **UI всегда читает и пишет в Dexie** (мгновенно, работает офлайн). Синк с Neon едет фоном через `api/sync`. Ни одно действие в зале не ждёт сеть.
-- Neon (serverless Postgres) — источник истины и бэкап. Drizzle-схема `src/server/schema.ts` — зеркало `src/db/schema.ts`, время везде `bigint` epoch ms.
-- Браузер не ходит в БД напрямую — только через `api/*` на Vercel Functions, проверка `Bearer APP_TOKEN`.
+- **Писать в синхронизируемые таблицы только через `src/db/write.ts`** (`putRow`/`putRows`/`softDelete`/`patchRow`) — он ставит `updatedAt`, по которому работает дельта-синк. Прямой `db.table.put/delete` в обход — правка не доедет до сервера. Удаление — только мягкое (`deleted: true`).
+- Neon (serverless Postgres) — источник истины и бэкап. Drizzle-схема `src/server/schema.ts` — зеркало `src/db/schema.ts`, время везде epoch ms.
+- Браузер не ходит в БД напрямую — только через `api/*` на Vercel Functions, проверка `Bearer APP_TOKEN` (код в localStorage, вводится на экране входа, в бандле его нет).
 - Один пользователь → синк last-write-wins, разрешение конфликтов не пишем.
+- Проверки: `npm run test:sync` (эндпоинт), `npm run test:e2e` (поток в браузере, нужны `dev` + `dev:api`).
 - Порядок: план 02 (бэкенд) → план 01 (ядро тренировок).
 
 ## Самопроверка через скриншот — обязательна

@@ -1,8 +1,9 @@
-/* Заливка справочника и программы v1 в БД. Идемпотентно: гоняется при
-   каждом старте, но пишет только если версии v1 ещё нет. */
+/* Заливка справочника и программы v1 в локальную БД. Идемпотентно:
+   гоняется при каждом старте, пишет только если версии v1 ещё нет.
+   Дальше эти строки уедут в Neon через синк. */
 
 import { db } from "~/db/schema";
-import type { ProgramSlot } from "~/db/schema";
+import { putRows } from "~/db/write";
 import {
   DAYS,
   EXERCISES,
@@ -14,34 +15,34 @@ export async function seedIfNeeded(): Promise<void> {
   const existing = await db.programVersions.get(PROGRAM_VERSION_ID);
   if (existing) return;
 
-  const slots: ProgramSlot[] = [];
-  for (const [day, seeds] of Object.entries(DAYS)) {
-    seeds.forEach((s, i) => {
-      const order = i + 1;
-      slots.push({
-        id: `${PROGRAM_VERSION_ID}:${day}:${order}`,
-        versionId: PROGRAM_VERSION_ID,
-        day: day as ProgramSlot["day"],
-        order,
-        exerciseId: s.exerciseId,
-        targetSets: s.targetSets,
-        repLow: s.repLow,
-        repHigh: s.repHigh,
-        perSide: s.perSide ?? false,
-        origin: s.origin,
-      });
-    });
-  }
+  await putRows(
+    "exercises",
+    EXERCISES.map((e) => ({ ...e, gifUrl: e.gifUrl ?? null })),
+  );
 
-  await db.transaction("rw", db.exercises, db.programVersions, db.programSlots, async () => {
-    await db.exercises.bulkPut(EXERCISES);
-    await db.programVersions.put({
+  await putRows("programVersions", [
+    {
       id: PROGRAM_VERSION_ID,
       programName: PROGRAM_NAME,
       createdAt: Date.now(),
       active: true,
       note: "Стартовая программа. Источник — context/03-programma-abc.md",
-    });
-    await db.programSlots.bulkPut(slots);
-  });
+    },
+  ]);
+
+  const slots = Object.entries(DAYS).flatMap(([day, seeds]) =>
+    seeds.map((s, i) => ({
+      id: `${PROGRAM_VERSION_ID}:${day}:${i + 1}`,
+      versionId: PROGRAM_VERSION_ID,
+      day,
+      ord: i + 1,
+      exerciseId: s.exerciseId,
+      targetSets: s.targetSets,
+      repLow: s.repLow,
+      repHigh: s.repHigh,
+      perSide: s.perSide ?? false,
+      origin: s.origin,
+    })),
+  );
+  await putRows("programSlots", slots);
 }

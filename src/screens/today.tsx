@@ -35,7 +35,7 @@ export function Today({ day, title, note, slots, exerciseById, onBack }: Props) 
             <li class="exrow" key={s.id}>
               <div class="exrow__top">
                 <span class="exrow__name">
-                  {s.order}. {ex.nameRu}
+                  {s.ord}. {ex.nameRu}
                   {s.perSide ? <span class="exrow__side"> · каждая сторона</span> : null}
                 </span>
                 <span class="exrow__sets num">
