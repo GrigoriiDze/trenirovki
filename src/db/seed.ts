@@ -17,7 +17,7 @@ export async function seedIfNeeded(): Promise<void> {
 
   await putRows(
     "exercises",
-    EXERCISES.map((e) => ({ ...e, gifUrl: e.gifUrl ?? null })),
+    EXERCISES.map((e) => ({ ...e, gifUrl: e.gifUrl ?? null, load: e.load ?? "weight" })),
   );
 
   await putRows("programVersions", [

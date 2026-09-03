@@ -6,8 +6,12 @@
 
 import type { DayCode, Exercise, Origin } from "~/db/schema";
 
-/** Упражнение без полей синхронизации — их проставит seed. */
-type ExerciseSeed = Omit<Exercise, "updatedAt" | "deleted" | "gifUrl"> & { gifUrl?: string | null };
+/** Упражнение без полей синхронизации — их проставит seed.
+ *  load по умолчанию "weight", указываем только исключения. */
+type ExerciseSeed = Omit<Exercise, "updatedAt" | "deleted" | "gifUrl" | "load"> & {
+  gifUrl?: string | null;
+  load?: Exercise["load"];
+};
 
 export const PROGRAM_VERSION_ID = "v1";
 export const PROGRAM_NAME = "Full body 1";
@@ -21,6 +25,7 @@ export const EXERCISES: ExerciseSeed[] = [
     muscle: "кор",
     equipment: "вес тела",
     rom: "iso",
+    load: "bw",
     restSec: 45,
     cue: "Поясница прижата к полу всё время — оторвалась, значит нога ушла слишком далеко. Это замена скручиваниям.",
   },
@@ -31,6 +36,7 @@ export const EXERCISES: ExerciseSeed[] = [
     muscle: "кор",
     equipment: "вес тела",
     rom: "iso",
+    load: "time",
     restSec: 45,
     cue: "Корпус в линию, таз не проваливается. Работает квадратная мышца поясницы — стабилизатор поясничного отдела сбоку.",
   },
@@ -51,6 +57,7 @@ export const EXERCISES: ExerciseSeed[] = [
     muscle: "кор",
     equipment: "вес тела",
     rom: "iso",
+    load: "bw",
     restSec: 45,
     cue: "Противоположные рука и нога, поясница неподвижна. Таз качается — сократи амплитуду ноги.",
   },

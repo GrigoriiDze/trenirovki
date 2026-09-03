@@ -27,6 +27,12 @@ export type DayCode = "A" | "B" | "C";
 /** Режим амплитуды — правило исполнения, не украшение (см. context/03). */
 export type Rom = "full" | "lengthened" | "short" | "iso";
 
+/** Как измеряется подход, определяет поля ввода:
+ *    weight — внешний вес: степперы кг + повторы
+ *    bw     — вес тела: только повторы
+ *    time   — удержание: только секунды (число кладём в reps) */
+export type Load = "weight" | "bw" | "time";
+
 /** Происхождение упражнения в программе — чтобы через полгода знать,
  *  кто так сказал: тренер или правка.
  *    nikita  — было на тренировке с Никитой, техника как показал
@@ -48,6 +54,7 @@ export interface Exercise extends Synced {
   muscle: string;           // основная целевая группа (для будущей аналитики)
   equipment: string;
   rom: Rom;
+  load: Load;               // режим ввода подхода
   cue: string;              // одна строка — то, что важнее гифки
   restSec: number;          // старт таймера отдыха по умолчанию
   gifUrl: string | null;    // появится на этапе «банк упражнений», пока пусто
@@ -143,6 +150,16 @@ db.version(2)
       });
     }
   });
+
+// v3: exercise.load — режим ввода подхода.
+const BW = new Set(["dead-bug", "bird-dog"]);
+const TIME = new Set(["side-plank"]);
+db.version(3).stores({}).upgrade(async (tx) => {
+  await tx.table("exercises").toCollection().modify((row: Record<string, unknown>) => {
+    row.load = TIME.has(row.id as string) ? "time" : BW.has(row.id as string) ? "bw" : "weight";
+    row.updatedAt = Date.now();
+  });
+});
 
 /** Имена синхронизируемых таблиц (без syncMeta). */
 export const SYNC_TABLES = [

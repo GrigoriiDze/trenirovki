@@ -8,9 +8,10 @@ interface Props {
   slots: ProgramSlot[];
   exerciseById: Map<string, Exercise>;
   onBack: () => void;
+  onStart: () => void;
 }
 
-export function Today({ day, title, note, slots, exerciseById, onBack }: Props) {
+export function Today({ day, title, note, slots, exerciseById, onBack, onStart }: Props) {
   return (
     <main class="today">
       <header class="today__head">
@@ -50,10 +51,9 @@ export function Today({ day, title, note, slots, exerciseById, onBack }: Props) 
       </ol>
 
       <div class="today__cta">
-        <button class="btn btn--primary" disabled>
+        <button class="btn btn--primary" onClick={onStart}>
           Начать тренировку
         </button>
-        <p class="today__stub">запуск сессии — этап 1</p>
       </div>
     </main>
   );

@@ -1,0 +1,1 @@
+ALTER TABLE "exercises" ADD COLUMN "load" text DEFAULT 'weight' NOT NULL;

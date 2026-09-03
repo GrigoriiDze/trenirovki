@@ -38,6 +38,10 @@
 .card--today {
   border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
 }
+.card--resume {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
 .card__day {
   font-size: var(--t-xl);
   font-weight: 600;

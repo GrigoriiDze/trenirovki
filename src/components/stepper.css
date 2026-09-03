@@ -1,0 +1,44 @@
+.stepper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  flex: 1;
+}
+.stepper__label {
+  padding-left: 2px;
+}
+.stepper__row {
+  display: grid;
+  grid-template-columns: var(--tap) 1fr var(--tap);
+  align-items: stretch;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.stepper__btn {
+  min-height: 56px;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--surface-2);
+  touch-action: none;
+  user-select: none;
+}
+.stepper__btn:active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.stepper__value {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 3px;
+  font-size: 24px;
+  font-weight: 600;
+}
+.stepper__unit {
+  font-size: var(--t-sm);
+  color: var(--text-3);
+  font-weight: 400;
+}

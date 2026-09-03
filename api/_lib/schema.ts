@@ -23,6 +23,7 @@ export const exercises = pgTable("exercises", {
   muscle: text("muscle").notNull(),
   equipment: text("equipment").notNull(),
   rom: text("rom").notNull(), // full | lengthened | short | iso
+  load: text("load").notNull().default("weight"), // weight | bw | time
   cue: text("cue").notNull().default(""),
   restSec: integer("rest_sec").notNull().default(60),
   gifUrl: text("gif_url"),

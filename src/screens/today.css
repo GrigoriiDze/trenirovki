@@ -97,11 +97,6 @@
   background: var(--accent);
   color: var(--accent-ink);
 }
-.btn--primary:disabled {
-  opacity: 0.4;
-}
-.today__stub {
-  margin: 0;
-  font-size: var(--t-xs);
-  color: var(--text-3);
+.btn--primary:active {
+  filter: brightness(0.92);
 }

@@ -7,14 +7,18 @@ import { DAY_TITLES, DAY_NOTES } from "~/data/program-v1";
 import { getToken } from "~/sync/client";
 import { runSync, startAutoSync } from "~/sync/engine";
 import { useSyncState } from "~/sync/use-sync";
+import { openSession, startSession } from "~/session/store";
 import { Home } from "~/screens/home";
 import { Today } from "~/screens/today";
+import { Session } from "~/screens/session";
+import { Summary } from "~/screens/summary";
 import { Unlock } from "~/screens/unlock";
 
-type View = "home" | "today";
-
-const initialView: View =
-  new URLSearchParams(location.search).get("screen") === "today" ? "today" : "home";
+type Route =
+  | { name: "home" }
+  | { name: "today" }
+  | { name: "session" }
+  | { name: "summary"; sessionId: string };
 
 export function App() {
   const [hasToken, setHasToken] = useState(() => Boolean(getToken()));
@@ -23,15 +27,13 @@ export function App() {
 }
 
 function Shell() {
-  const [view, setView] = useState<View>(initialView);
+  const [route, setRoute] = useState<Route>({ name: "home" });
   const [ready, setReady] = useState(false);
   const sync = useSyncState();
 
   useEffect(() => {
     let stop = () => {};
     (async () => {
-      // сначала тянем с сервера (второе устройство получит настоящую программу),
-      // потом сидим локально, только если так и пусто
       await runSync().catch(() => {});
       await seedIfNeeded();
       setReady(true);
@@ -41,30 +43,55 @@ function Shell() {
   }, []);
 
   const day = useLive(() => nextDay(), []);
-  const slots = useLive(
-    async () =>
-      day
-        ? db.programSlots.where({ versionId: "v1", day }).filter((s) => !s.deleted).sortBy("ord")
-        : [],
+  const exercises = useLive(() => db.exercises.filter((e) => !e.deleted).toArray(), []);
+  const open = useLive(() => openSession(), []);
+
+  // слоты дня для экрана «Сегодня»
+  const todaySlots = useLive(
+    async () => (day ? slotsFor("v1", day) : []),
     [day],
   );
-  const exercises = useLive(() => db.exercises.filter((e) => !e.deleted).toArray(), []);
+  // слоты активной сессии (её день/версия зафиксированы)
+  const sessSlots = useLive(
+    async () => (open ? slotsFor(open.versionId, open.day) : []),
+    [open?.id],
+  );
 
-  if (!ready || !day || !slots || !exercises) {
+  if (!ready || !day || !exercises || !todaySlots) {
     return <div class="boot">загрузка…</div>;
   }
 
   const byId = new Map(exercises.map((e) => [e.id, e]));
 
-  if (view === "today") {
+  if (route.name === "session" && open && sessSlots?.length) {
+    return (
+      <Session
+        session={open}
+        slots={sessSlots}
+        exerciseById={byId}
+        onExit={() => setRoute({ name: "home" })}
+        onFinish={() => setRoute({ name: "summary", sessionId: open.id })}
+      />
+    );
+  }
+
+  if (route.name === "summary") {
+    return <SummaryLoader sessionId={route.sessionId} byId={byId} onHome={() => setRoute({ name: "home" })} />;
+  }
+
+  if (route.name === "today") {
     return (
       <Today
         day={day}
         title={DAY_TITLES[day]}
         note={DAY_NOTES[day]}
-        slots={slots}
+        slots={todaySlots}
         exerciseById={byId}
-        onBack={() => setView("home")}
+        onBack={() => setRoute({ name: "home" })}
+        onStart={async () => {
+          if (!open) await startSession(day, "v1");
+          setRoute({ name: "session" });
+        }}
       />
     );
   }
@@ -73,9 +100,32 @@ function Shell() {
     <Home
       day={day}
       dayTitle={DAY_TITLES[day]}
-      exerciseCount={slots.length}
+      exerciseCount={todaySlots.length}
       sync={sync}
-      onOpenToday={() => setView("today")}
+      hasOpenSession={Boolean(open)}
+      onOpenToday={() => setRoute({ name: "today" })}
+      onResume={() => setRoute({ name: "session" })}
     />
   );
+}
+
+function slotsFor(versionId: string, day: string) {
+  return db.programSlots
+    .where({ versionId, day })
+    .filter((s) => !s.deleted)
+    .sortBy("ord");
+}
+
+function SummaryLoader({
+  sessionId,
+  byId,
+  onHome,
+}: {
+  sessionId: string;
+  byId: Map<string, import("~/db/schema").Exercise>;
+  onHome: () => void;
+}) {
+  const s = useLive(() => db.sessions.get(sessionId), [sessionId]);
+  if (!s) return <div class="boot">…</div>;
+  return <Summary session={s} exerciseById={byId} onHome={onHome} />;
 }

@@ -7,7 +7,9 @@ interface Props {
   dayTitle: string;
   exerciseCount: number;
   sync: SyncState;
+  hasOpenSession: boolean;
   onOpenToday: () => void;
+  onResume: () => void;
 }
 
 const TODAY_FMT = new Intl.DateTimeFormat("ru-RU", {
@@ -24,7 +26,15 @@ function syncLabel(s: SyncState): { text: string; tone: "ok" | "wait" | "bad" } 
   return { text: "сохранено", tone: "ok" };
 }
 
-export function Home({ day, dayTitle, exerciseCount, sync, onOpenToday }: Props) {
+export function Home({
+  day,
+  dayTitle,
+  exerciseCount,
+  sync,
+  hasOpenSession,
+  onOpenToday,
+  onResume,
+}: Props) {
   const sl = syncLabel(sync);
   return (
     <main class="home">
@@ -33,13 +43,21 @@ export function Home({ day, dayTitle, exerciseCount, sync, onOpenToday }: Props)
         <span class="home__date">{TODAY_FMT.format(new Date())}</span>
       </header>
 
-      <button class="card card--today" onClick={onOpenToday}>
-        <span class="label">Сегодня</span>
-        <span class="card__day">День {day}</span>
-        <span class="card__sub">{dayTitle}</span>
-        <span class="card__meta num">{exerciseCount} упражнений</span>
-        <span class="card__go" aria-hidden="true">→</span>
-      </button>
+      {hasOpenSession ? (
+        <button class="card card--resume" onClick={onResume}>
+          <span class="label">Идёт тренировка</span>
+          <span class="card__day">Продолжить</span>
+          <span class="card__go" aria-hidden="true">→</span>
+        </button>
+      ) : (
+        <button class="card card--today" onClick={onOpenToday}>
+          <span class="label">Сегодня</span>
+          <span class="card__day">День {day}</span>
+          <span class="card__sub">{dayTitle}</span>
+          <span class="card__meta num">{exerciseCount} упражнений</span>
+          <span class="card__go" aria-hidden="true">→</span>
+        </button>
+      )}
 
       <nav class="tiles">
         <div class="tile" aria-disabled="true">
