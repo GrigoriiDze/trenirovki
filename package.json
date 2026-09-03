@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "dev:api": "node --env-file=.env --watch scripts/dev-api.mjs",
+    "dev:api": "tsx watch --env-file=.env scripts/dev-api.ts",
     "build": "tsc -b && tsc -p api/tsconfig.json && vite build",
     "preview": "vite preview --host",
     "shot": "node --env-file-if-exists=.env scripts/shot.mjs",
-    "test:sync": "node --env-file=.env scripts/test-sync.mjs",
+    "test:sync": "tsx --env-file=.env scripts/test-sync.ts",
     "test:e2e": "node --env-file=.env scripts/e2e.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
@@ -27,6 +27,7 @@
     "@vercel/node": "^12.0.0",
     "drizzle-kit": "^0.31.10",
     "playwright": "^1.62.1",
+    "tsx": "^4.23.13",
     "typescript": "^5.7.0",
     "vite": "^7.0.0",
     "vite-plugin-pwa": "^1.3.0"

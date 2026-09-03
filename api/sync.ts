@@ -9,7 +9,7 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { gt } from "drizzle-orm";
-import { getDb, schema } from "../src/server/db.ts";
+import { getDb, schema } from "./_lib/db";
 
 const TABLES = {
   exercises: schema.exercises,

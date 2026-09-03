@@ -6,6 +6,6 @@
     "jsx": "preserve",
     "noEmit": true
   },
-  "include": ["./**/*.ts", "../src/server/**/*.ts"],
+  "include": ["./**/*.ts"],
   "exclude": []
 }
