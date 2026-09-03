@@ -3,6 +3,7 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "regions": ["fra1"],
   "rewrites": [{ "source": "/((?!assets/|icon-|favicon|manifest|sw\\.js|workbox-|registerSW).*)", "destination": "/index.html" }],
   "headers": [
     {
