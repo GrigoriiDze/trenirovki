@@ -10,6 +10,7 @@ interface Props {
   hasOpenSession: boolean;
   onOpenToday: () => void;
   onResume: () => void;
+  onOpenDiary: () => void;
 }
 
 const TODAY_FMT = new Intl.DateTimeFormat("ru-RU", {
@@ -34,6 +35,7 @@ export function Home({
   hasOpenSession,
   onOpenToday,
   onResume,
+  onOpenDiary,
 }: Props) {
   const sl = syncLabel(sync);
   return (
@@ -60,10 +62,9 @@ export function Home({
       )}
 
       <nav class="tiles">
-        <div class="tile" aria-disabled="true">
+        <button class="tile tile--on" onClick={onOpenDiary}>
           <span class="tile__name">Дневник</span>
-          <span class="tile__soon">скоро</span>
-        </div>
+        </button>
         <div class="tile" aria-disabled="true">
           <span class="tile__name">Тело</span>
           <span class="tile__soon">скоро</span>

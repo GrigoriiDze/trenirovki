@@ -75,10 +75,19 @@
   flex-direction: column;
   gap: 2px;
   padding: var(--s-3);
+  min-height: 56px;
   border-radius: var(--radius-sm);
   background: var(--surface);
   border: 1px solid var(--line);
   opacity: 0.55;
+  text-align: left;
+}
+.tile--on {
+  opacity: 1;
+  cursor: pointer;
+}
+.tile--on:active {
+  background: var(--surface-2);
 }
 .tile__name {
   font-size: var(--t-sm);

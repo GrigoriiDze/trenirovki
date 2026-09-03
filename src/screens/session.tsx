@@ -3,6 +3,7 @@ import { db, type Exercise, type ProgramSlot, type Session as Sess } from "~/db/
 import { useLive } from "~/lib/live";
 import { formatSet } from "~/lib/format-set";
 import { editSet, finishSession, logSet } from "~/session/store";
+import { lastSetsFor } from "~/session/history";
 import { Stepper } from "~/components/stepper";
 import { RestTimer } from "~/components/rest-timer";
 import "./session.css";
@@ -37,6 +38,15 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
     [logs, slot.exerciseId],
   );
 
+  const prev = useLive(() => lastSetsFor(slot.exerciseId, session.id), [slot.exerciseId, session.id]);
+
+  /** Прикидка для подхода idx (с нуля): подход idx прошлого раза → его последний → минимум. */
+  function guess(idx: number): { weight: number; reps: number } {
+    const p = prev?.[idx] ?? prev?.[prev.length - 1];
+    if (p) return { weight: p.weight, reps: p.reps };
+    return { weight: load === "weight" ? 20 : 0, reps: slot.repLow };
+  }
+
   const firstUndone = useMemo(() => {
     if (!logs) return 0;
     const i = slots.findIndex(
@@ -49,22 +59,22 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
     setExIdx(firstUndone);
   }, [firstUndone]);
 
+  // сброс режима при смене упражнения
   useEffect(() => {
-    const last = exLogs[exLogs.length - 1];
-    if (load === "time") {
-      setReps(last ? last.reps : slot.repLow);
-      setWeight(0);
-    } else if (load === "bw") {
-      setReps(last ? last.reps : slot.repLow);
-      setWeight(0);
-    } else {
-      setWeight(last ? last.weight : 20);
-      setReps(last ? last.reps : slot.repLow);
-    }
     setEditing(null);
     setResting(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slot.id]);
+
+  // дефолт ввода: подход из этой же сессии → прикидка по прошлому разу.
+  // Не трогаем во время правки и отдыха.
+  useEffect(() => {
+    if (editing || resting) return;
+    const inSession = exLogs[exLogs.length - 1];
+    const g = inSession ? { weight: inSession.weight, reps: inSession.reps } : guess(exLogs.length);
+    setWeight(load === "weight" ? g.weight : 0);
+    setReps(g.reps);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slot.id, exLogs.length, resting, editing, prev]);
 
   if (!logs) return <div class="boot">загрузка…</div>;
 
@@ -134,6 +144,11 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
           {targetStr}
           {slot.perSide ? " · каждая сторона" : ""}
         </p>
+        {prev && prev.length > 0 ? (
+          <p class="sess__prev num">
+            было: {prev.map((p) => formatSet(load, p.weight, p.reps)).join(" · ")}
+          </p>
+        ) : null}
         <p class="sess__cue">{ex.cue}</p>
       </div>
 

@@ -18,6 +18,7 @@ page.on("pageerror", (e) => errs.push("pageerror: " + e.message));
 page.on("console", (m) => m.type() === "error" && errs.push("console: " + m.text()));
 
 const step = (n, msg) => console.log(`${n}. ${msg}`);
+const testStart = Date.now(); // чистим только сессии, созданные в этом прогоне
 
 await page.goto(BASE, { waitUntil: "networkidle" });
 await page.fill(".unlock__input", TOKEN);
@@ -74,28 +75,49 @@ await page.click(".sum .btn--primary");
 await page.waitForSelector(".home");
 step(8, "вернулись на главный");
 
-// вытащить id тестовой сессии, дать синку уехать
-const sessId = await page.evaluate(
-  () =>
+// вторая тренировка того же дня → должно появиться «было»
+await page.click(".card--today");
+await page.waitForSelector(".today");
+await page.click(".daychip:has-text('A')");
+await page.click(".today__cta .btn--primary");
+await page.waitForSelector(".sess");
+const prevLine = await page.locator(".sess__prev").first().textContent().catch(() => null);
+step(9, `«было» на 2-й тренировке: ${prevLine ? JSON.stringify(prevLine.trim()) : "НЕТ"}`);
+await page.click(".sess__x"); // выйти, не записывая
+
+// дневник
+await page.click(".tile--on");
+await page.waitForSelector(".diary");
+const diaryRows = await page.locator(".drow").count();
+step(10, `дневник: ${diaryRows} тренировк(и)`);
+await page.locator(".drow__head").first().click();
+await page.waitForSelector(".drow__body");
+await page.screenshot({ path: `${OUT}/e2e-diary.png` });
+
+const ids = await page.evaluate(
+  (since) =>
     new Promise((res) => {
       const r = indexedDB.open("trenirovki");
       r.onsuccess = () => {
         const all = r.result.transaction("sessions", "readonly").objectStore("sessions").getAll();
         all.onsuccess = () =>
-          res(all.result.sort((a, b) => b.startedAt - a.startedAt)[0]?.id ?? null);
+          res(all.result.filter((s) => s.startedAt >= since).map((s) => s.id));
       };
     }),
+  testStart,
 );
 await page.evaluate(() => window.dispatchEvent(new Event("online")));
 await page.waitForTimeout(1500);
 await browser.close();
 
-// уборка в Neon: тестовая сессия и её подходы
-if (sessId && process.env.DATABASE_URL) {
+// чистим ТОЛЬКО сессии этого прогона (startedAt >= testStart) — чужие не трогаем
+if (ids.length && process.env.DATABASE_URL) {
   const sql = neon(process.env.DATABASE_URL);
-  await sql`delete from set_logs where session_id = ${sessId}`;
-  await sql`delete from sessions where id = ${sessId}`;
-  step(9, `убрано из Neon: сессия ${sessId.slice(0, 8)}`);
+  for (const id of ids) {
+    await sql`delete from set_logs where session_id = ${id}`;
+    await sql`delete from sessions where id = ${id}`;
+  }
+  step(11, `убрано из Neon: ${ids.length} тестовых сесси(й)`);
 }
 
 console.log(errs.length ? "ОШИБКИ:\n" + errs.join("\n") : "✓ ошибок консоли нет");

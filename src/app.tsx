@@ -12,13 +12,15 @@ import { Home } from "~/screens/home";
 import { Today } from "~/screens/today";
 import { Session } from "~/screens/session";
 import { Summary } from "~/screens/summary";
+import { Diary } from "~/screens/diary";
 import { Unlock } from "~/screens/unlock";
 
 type Route =
   | { name: "home" }
   | { name: "today" }
   | { name: "session" }
-  | { name: "summary"; sessionId: string };
+  | { name: "summary"; sessionId: string }
+  | { name: "diary" };
 
 export function App() {
   const [hasToken, setHasToken] = useState(() => Boolean(getToken()));
@@ -87,6 +89,10 @@ function Shell() {
     return <SummaryLoader sessionId={route.sessionId} byId={byId} onHome={() => setRoute({ name: "home" })} />;
   }
 
+  if (route.name === "diary") {
+    return <Diary exerciseById={byId} onBack={() => setRoute({ name: "home" })} />;
+  }
+
   if (route.name === "today") {
     return (
       <Today
@@ -115,6 +121,7 @@ function Shell() {
       hasOpenSession={Boolean(open)}
       onOpenToday={() => setRoute({ name: "today" })}
       onResume={() => setRoute({ name: "session" })}
+      onOpenDiary={() => setRoute({ name: "diary" })}
     />
   );
 }
