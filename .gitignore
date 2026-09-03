@@ -1,0 +1,16 @@
+node_modules/
+dist/
+dev-dist/
+.vite/
+*.local
+.env
+.env.*
+!.env.example
+
+# скриншот-харнесс (npm run shot)
+shots/
+test-results/
+playwright-report/
+
+.DS_Store
+Thumbs.db
