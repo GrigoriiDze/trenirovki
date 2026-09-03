@@ -4,7 +4,7 @@
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { Buffer } from "node:buffer";
-import syncHandler from "../api/sync";
+import syncHandler from "../api/sync.js";
 
 const PORT = 3001;
 const ROUTES: Record<string, unknown> = { "/api/sync": syncHandler };

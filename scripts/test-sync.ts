@@ -2,8 +2,8 @@
    Пишет и удаляет строку с id "__test__". */
 
 import { eq } from "drizzle-orm";
-import handler from "../api/sync";
-import { getDb, schema } from "../api/_lib/db";
+import handler from "../api/sync.js";
+import { getDb, schema } from "../api/_lib/db.js";
 
 const TOKEN = process.env.APP_TOKEN;
 

@@ -1,12 +1,29 @@
 /* Единственная точка синхронизации. POST /api/sync
    Auth: Authorization: Bearer <APP_TOKEN>
+
    Запрос:  { since: number, push?: { [table]: Row[] } }
    Ответ:   { now: number, pull: { [table]: Row[] } }
 
-   Импорты внутри handler — чтобы ошибка загрузки модуля возвращалась
-   текстом, а не роняла функцию. */
+   push — upsert по первичному ключу (last-write-wins, один пользователь).
+   pull — все строки с updated_at > since, включая deleted:true.
+
+   Расширения .js в относительных импортах обязательны: Vercel держит
+   "type":"module", ESM-Node без расширения не резолвит скомпилированный код. */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { gt } from "drizzle-orm";
+import { getDb, schema } from "./_lib/db.js";
+
+const TABLES = {
+  exercises: schema.exercises,
+  programVersions: schema.programVersions,
+  programSlots: schema.programSlots,
+  sessions: schema.sessions,
+  setLogs: schema.setLogs,
+} as const;
+
+type TableName = keyof typeof TABLES;
+const NAMES = Object.keys(TABLES) as TableName[];
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (req.method !== "POST") {
@@ -20,19 +37,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   }
 
   try {
-    const { gt } = await import("drizzle-orm");
-    const { getDb, schema } = await import("./_lib/db");
-
-    const TABLES = {
-      exercises: schema.exercises,
-      programVersions: schema.programVersions,
-      programSlots: schema.programSlots,
-      sessions: schema.sessions,
-      setLogs: schema.setLogs,
-    } as const;
-    type TableName = keyof typeof TABLES;
-    const NAMES = Object.keys(TABLES) as TableName[];
-
     const body =
       typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body ?? {});
     const since = typeof body.since === "number" ? body.since : 0;
@@ -60,8 +64,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     res.status(200).json({ now: Date.now(), pull });
   } catch (e) {
     console.error("sync error", e);
-    res
-      .status(500)
-      .json({ error: e instanceof Error ? e.message : String(e), stack: e instanceof Error ? e.stack : undefined });
+    res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
   }
 }
