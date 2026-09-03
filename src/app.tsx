@@ -1,7 +1,8 @@
 import { useEffect, useState } from "preact/hooks";
+import type { ComponentChildren } from "preact";
 import { useLive } from "~/lib/live";
 import { nextDay } from "~/lib/rotation";
-import { db, type DayCode } from "~/db/schema";
+import { db, type DayCode, type Exercise } from "~/db/schema";
 import { seedIfNeeded } from "~/db/seed";
 import { DAY_TITLES, DAY_NOTES } from "~/data/program-v1";
 import { getToken } from "~/sync/client";
@@ -22,9 +23,25 @@ type Route =
   | { name: "summary"; sessionId: string }
   | { name: "diary" };
 
+/** Обёртка экрана: безопасные зоны (вырез/статус-бар) + анимация появления.
+ *  key меняется при смене экрана → Preact перемонтирует → проигрывается вход. */
+function Screen({ k, children }: { k: string; children: ComponentChildren }) {
+  return (
+    <div class="screen" key={k}>
+      {children}
+    </div>
+  );
+}
+
 export function App() {
   const [hasToken, setHasToken] = useState(() => Boolean(getToken()));
-  if (!hasToken) return <Unlock onDone={() => setHasToken(true)} />;
+  if (!hasToken) {
+    return (
+      <Screen k="unlock">
+        <Unlock onDone={() => setHasToken(true)} />
+      </Screen>
+    );
+  }
   return <Shell />;
 }
 
@@ -53,19 +70,11 @@ function Shell() {
   const exercises = useLive(() => db.exercises.filter((e) => !e.deleted).toArray(), []);
   const open = useLive(() => openSession(), []);
 
-  // какой день показывает «Сегодня»: по умолчанию подсказанный, можно сменить вручную
   const [pickedDay, setPickedDay] = useState<DayCode | null>(null);
   const day = pickedDay ?? suggested ?? null;
 
-  const todaySlots = useLive(
-    async () => (day ? slotsFor("v1", day) : []),
-    [day],
-  );
-  // слоты активной сессии (её день/версия зафиксированы)
-  const sessSlots = useLive(
-    async () => (open ? slotsFor(open.versionId, open.day) : []),
-    [open?.id],
-  );
+  const todaySlots = useLive(async () => (day ? slotsFor("v1", day) : []), [day]);
+  const sessSlots = useLive(async () => (open ? slotsFor(open.versionId, open.day) : []), [open?.id]);
 
   if (!ready || !day || !suggested || !exercises || !todaySlots) {
     return <div class="boot">загрузка…</div>;
@@ -73,8 +82,11 @@ function Shell() {
 
   const byId = new Map(exercises.map((e) => [e.id, e]));
 
+  let screen: ComponentChildren;
+  let key: string = route.name;
+
   if (route.name === "session" && open && sessSlots?.length) {
-    return (
+    screen = (
       <Session
         session={open}
         slots={sessSlots}
@@ -83,18 +95,19 @@ function Shell() {
         onFinish={() => setRoute({ name: "summary", sessionId: open.id })}
       />
     );
-  }
-
-  if (route.name === "summary") {
-    return <SummaryLoader sessionId={route.sessionId} byId={byId} onHome={() => setRoute({ name: "home" })} />;
-  }
-
-  if (route.name === "diary") {
-    return <Diary exerciseById={byId} onBack={() => setRoute({ name: "home" })} />;
-  }
-
-  if (route.name === "today") {
-    return (
+  } else if (route.name === "summary") {
+    key = `summary-${route.sessionId}`;
+    screen = (
+      <SummaryLoader
+        sessionId={route.sessionId}
+        byId={byId}
+        onHome={() => setRoute({ name: "home" })}
+      />
+    );
+  } else if (route.name === "diary") {
+    screen = <Diary exerciseById={byId} onBack={() => setRoute({ name: "home" })} />;
+  } else if (route.name === "today") {
+    screen = (
       <Today
         day={day}
         suggested={suggested}
@@ -110,20 +123,22 @@ function Shell() {
         }}
       />
     );
+  } else {
+    screen = (
+      <Home
+        day={suggested}
+        dayTitle={DAY_TITLES[suggested]}
+        exerciseCount={todaySlots.length}
+        sync={sync}
+        hasOpenSession={Boolean(open)}
+        onOpenToday={() => setRoute({ name: "today" })}
+        onResume={() => setRoute({ name: "session" })}
+        onOpenDiary={() => setRoute({ name: "diary" })}
+      />
+    );
   }
 
-  return (
-    <Home
-      day={suggested}
-      dayTitle={DAY_TITLES[suggested]}
-      exerciseCount={todaySlots.length}
-      sync={sync}
-      hasOpenSession={Boolean(open)}
-      onOpenToday={() => setRoute({ name: "today" })}
-      onResume={() => setRoute({ name: "session" })}
-      onOpenDiary={() => setRoute({ name: "diary" })}
-    />
-  );
+  return <Screen k={key}>{screen}</Screen>;
 }
 
 function slotsFor(versionId: string, day: string) {
@@ -139,7 +154,7 @@ function SummaryLoader({
   onHome,
 }: {
   sessionId: string;
-  byId: Map<string, import("~/db/schema").Exercise>;
+  byId: Map<string, Exercise>;
   onHome: () => void;
 }) {
   const s = useLive(() => db.sessions.get(sessionId), [sessionId]);

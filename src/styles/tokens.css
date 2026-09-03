@@ -108,6 +108,38 @@ html, body, #app {
   height: 100%;
 }
 
+/* Экран: безопасные зоны (вырез, статус-бар, домашняя полоска) +
+   мягкое появление при переходе. */
+.screen {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  animation: screen-in 0.22s ease-out;
+}
+.screen > * {
+  flex: 1;
+}
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes screen-fade {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen {
+    animation-name: screen-fade;
+    animation-duration: 0.14s;
+  }
+}
+
 body {
   margin: 0;
   background: var(--bg);
