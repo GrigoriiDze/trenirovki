@@ -11,9 +11,10 @@ import { chromium } from "playwright";
 
 const OUT = fileURLToPath(new URL("../shots", import.meta.url));
 
-// маршруты: [имя файла, hash]. Пока экран один — дальше добавляем.
+// [имя файла, путь]. SPA без роутера — экран задаётся ?screen=
 const ROUTES = [
-  ["today", "/"],
+  ["home", "/"],
+  ["today", "/?screen=today"],
 ];
 
 const VIEWPORT = { width: 390, height: 844 }; // iPhone 13/14

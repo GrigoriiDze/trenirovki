@@ -297,9 +297,9 @@ export interface SlotSeed {
 }
 
 export const DAY_TITLES: Record<DayCode, string> = {
-  A: "Задняя цепь и тяга",
-  B: "Квадрицепс и жим",
-  C: "Таз и осанка",
+  A: "Спина, задняя поверхность бедра, плечи",
+  B: "Ноги, грудь, руки",
+  C: "Ягодицы, осанка, плечи",
 };
 
 export const DAY_NOTES: Record<DayCode, string> = {

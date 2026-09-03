@@ -148,6 +148,14 @@ button {
   border-radius: var(--radius-sm);
 }
 
+.boot {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--text-3);
+  font-size: var(--t-sm);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
