@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { db, type Exercise, type ProgramSlot, type Session as Sess } from "~/db/schema";
 import { useLive } from "~/lib/live";
 import { formatSet } from "~/lib/format-set";
@@ -31,6 +31,14 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [flash, setFlash] = useState<number | null>(null);
 
+  // общее время тренировки — тикает раз в 20 сек
+  const [elapsed, setElapsed] = useState(() => Date.now() - session.startedAt);
+  useEffect(() => {
+    const id = window.setInterval(() => setElapsed(Date.now() - session.startedAt), 20_000);
+    return () => window.clearInterval(id);
+  }, [session.startedAt]);
+  const mins = Math.floor(elapsed / 60000);
+
   const slot = slots[exIdx]!;
   const ex = exerciseById.get(slot.exerciseId)!;
   const load = ex.load;
@@ -49,17 +57,17 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
     return { weight: load === "weight" ? 20 : 0, reps: slot.repLow };
   }
 
-  const firstUndone = useMemo(() => {
-    if (!logs) return 0;
+  // на входе встаём на первое недоделанное упражнение — дальше навигация
+  // полностью ручная (в зале порядок часто другой: занят тренажёр и т.п.)
+  const jumped = useRef(false);
+  useEffect(() => {
+    if (jumped.current || !logs) return;
     const i = slots.findIndex(
       (s) => logs.filter((l) => l.exerciseId === s.exerciseId).length < s.targetSets,
     );
-    return i === -1 ? slots.length - 1 : i;
+    setExIdx(i === -1 ? 0 : i);
+    jumped.current = true;
   }, [logs, slots]);
-
-  useEffect(() => {
-    setExIdx(firstUndone);
-  }, [firstUndone]);
 
   // сброс режима при смене упражнения
   useEffect(() => {
@@ -126,7 +134,8 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
             ‹
           </button>
           <span class="sess__count num">
-            {exIdx + 1} / {slots.length}
+            {exIdx + 1}/{slots.length}
+            <span class="sess__time"> · {mins} мин</span>
           </span>
           <button
             class="sess__arrow"
@@ -161,7 +170,8 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
       </div>
 
       <ol class="setlist">
-        {Array.from({ length: Math.max(target, done) }).map((_, i) => {
+        {/* всегда есть один пустой «текущий» подход — сам решаешь, сколько делать */}
+        {Array.from({ length: Math.max(target, done + 1) }).map((_, i) => {
           const log = exLogs[i];
           const isCurrent = !log && i === done && !editing;
           const wasHint = prev?.[i] ? formatSet(load, prev[i]!.weight, prev[i]!.reps) : null;
@@ -215,12 +225,12 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
             </div>
 
             <button class="sess__log" onClick={commit}>
-              {editing ? "Сохранить" : allDone ? "Записать ещё" : `Записать подход ${done + 1}`}
+              {editing ? "Сохранить" : `Записать подход ${done + 1}`}
             </button>
 
             {allDone ? (
               <button class="sess__finish" onClick={() => void finishSession(session.id).then(onFinish)}>
-                Завершить тренировку
+                Завершить тренировку · {mins} мин
               </button>
             ) : null}
           </>

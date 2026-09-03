@@ -40,9 +40,12 @@
 }
 .sess__count {
   font-size: var(--t-sm);
-  color: var(--text-3);
-  min-width: 4ch;
+  color: var(--text-2);
   text-align: center;
+  white-space: nowrap;
+}
+.sess__time {
+  color: var(--text-3);
 }
 .sess__end {
   font-size: var(--t-sm);
