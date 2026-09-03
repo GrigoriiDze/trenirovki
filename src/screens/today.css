@@ -9,18 +9,50 @@
 
 .today__head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--s-3);
 }
 .today__back {
   min-width: var(--tap);
   min-height: var(--tap);
-  margin: calc(var(--s-2) * -1) 0 0 calc(var(--s-2) * -1);
+  margin-left: calc(var(--s-2) * -1);
   font-size: var(--t-xl);
   color: var(--text-2);
   border-radius: var(--radius);
 }
-.today__head h1 {
+.today__daypick {
+  display: flex;
+  gap: var(--s-1);
+  margin-left: auto;
+}
+.daychip {
+  position: relative;
+  min-width: 40px;
+  min-height: var(--tap);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: var(--t-md);
+  font-weight: 600;
+}
+.daychip--on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.daychip__dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.today__title h1 {
   font-size: var(--t-lg);
 }
 .today__sub {

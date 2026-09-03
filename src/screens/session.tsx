@@ -24,7 +24,6 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
   const [exIdx, setExIdx] = useState(0);
   const [weight, setWeight] = useState(20);
   const [reps, setReps] = useState(10);
-  const [back, setBack] = useState<0 | 1 | 2 | null>(null);
   const [resting, setResting] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [confirmEnd, setConfirmEnd] = useState(false);
@@ -62,7 +61,6 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
       setWeight(last ? last.weight : 20);
       setReps(last ? last.reps : slot.repLow);
     }
-    setBack(null);
     setEditing(null);
     setResting(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -81,12 +79,11 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
 
   async function commit() {
     if (editing) {
-      await editSet(editing, { weight, reps, backFeel: back });
+      await editSet(editing, { weight, reps });
       setEditing(null);
       return;
     }
-    await logSet(session.id, slot.exerciseId, { weight, reps, backFeel: back, rir: null });
-    setBack(null);
+    await logSet(session.id, slot.exerciseId, { weight, reps, backFeel: null, rir: null });
     if (ex.restSec > 0) setResting(true);
   }
 
@@ -156,7 +153,6 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
                       setEditing(log.id);
                       setWeight(log.weight);
                       setReps(log.reps);
-                      setBack(log.backFeel);
                       setResting(false);
                     }
                   : undefined
@@ -168,9 +164,6 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
               ) : (
                 <span class="setrow__val setrow__val--pending">{isCurrent ? "сейчас" : "—"}</span>
               )}
-              {log?.backFeel != null ? (
-                <span class={`setrow__back setrow__back--${log.backFeel}`}>спина {log.backFeel}</span>
-              ) : null}
             </li>
           );
         })}
@@ -190,19 +183,6 @@ export function Session({ session, slots, exerciseById, onExit, onFinish }: Prop
               ) : (
                 <Stepper label="повторы" value={reps} step={1} min={1} onChange={setReps} />
               )}
-            </div>
-
-            <div class="sess__back">
-              <span class="label">спина</span>
-              {[0, 1, 2].map((n) => (
-                <button
-                  key={n}
-                  class={`backbtn backbtn--${n} ${back === n ? "backbtn--on" : ""}`}
-                  onClick={() => setBack(back === n ? null : (n as 0 | 1 | 2))}
-                >
-                  {n}
-                </button>
-              ))}
             </div>
 
             <button class="sess__log" onClick={commit}>

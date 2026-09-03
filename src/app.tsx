@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { useLive } from "~/lib/live";
 import { nextDay } from "~/lib/rotation";
-import { db } from "~/db/schema";
+import { db, type DayCode } from "~/db/schema";
 import { seedIfNeeded } from "~/db/seed";
 import { DAY_TITLES, DAY_NOTES } from "~/data/program-v1";
 import { getToken } from "~/sync/client";
@@ -26,8 +26,13 @@ export function App() {
   return <Shell />;
 }
 
+const initialRoute: Route =
+  new URLSearchParams(location.search).get("screen") === "today"
+    ? { name: "today" }
+    : { name: "home" };
+
 function Shell() {
-  const [route, setRoute] = useState<Route>({ name: "home" });
+  const [route, setRoute] = useState<Route>(initialRoute);
   const [ready, setReady] = useState(false);
   const sync = useSyncState();
 
@@ -42,11 +47,14 @@ function Shell() {
     return () => stop();
   }, []);
 
-  const day = useLive(() => nextDay(), []);
+  const suggested = useLive(() => nextDay(), []);
   const exercises = useLive(() => db.exercises.filter((e) => !e.deleted).toArray(), []);
   const open = useLive(() => openSession(), []);
 
-  // слоты дня для экрана «Сегодня»
+  // какой день показывает «Сегодня»: по умолчанию подсказанный, можно сменить вручную
+  const [pickedDay, setPickedDay] = useState<DayCode | null>(null);
+  const day = pickedDay ?? suggested ?? null;
+
   const todaySlots = useLive(
     async () => (day ? slotsFor("v1", day) : []),
     [day],
@@ -57,7 +65,7 @@ function Shell() {
     [open?.id],
   );
 
-  if (!ready || !day || !exercises || !todaySlots) {
+  if (!ready || !day || !suggested || !exercises || !todaySlots) {
     return <div class="boot">загрузка…</div>;
   }
 
@@ -83,10 +91,12 @@ function Shell() {
     return (
       <Today
         day={day}
+        suggested={suggested}
         title={DAY_TITLES[day]}
         note={DAY_NOTES[day]}
         slots={todaySlots}
         exerciseById={byId}
+        onPickDay={setPickedDay}
         onBack={() => setRoute({ name: "home" })}
         onStart={async () => {
           if (!open) await startSession(day, "v1");
@@ -98,8 +108,8 @@ function Shell() {
 
   return (
     <Home
-      day={day}
-      dayTitle={DAY_TITLES[day]}
+      day={suggested}
+      dayTitle={DAY_TITLES[suggested]}
       exerciseCount={todaySlots.length}
       sync={sync}
       hasOpenSession={Boolean(open)}

@@ -1,8 +1,10 @@
 /* Прогон потока тренировки в браузере: unlock → день → старт → запись
-   подхода → таймер → завершение → итог. Скриншоты в shots/e2e-*.
-   Требует `npm run dev` и `npm run dev:api`. `npm run test:e2e` */
+   подхода → таймер → завершение → итог + синк. Чистит за собой в Neon.
+   Скриншоты в shots/e2e-*. Требует `npm run dev` и `npm run dev:api`.
+   `npm run test:e2e` */
 
 import { chromium } from "playwright";
+import { neon } from "@neondatabase/serverless";
 
 const TOKEN = process.env.APP_TOKEN;
 const BASE = "http://localhost:5173";
@@ -25,23 +27,28 @@ step(1, "вход + главный");
 
 await page.click(".card--today");
 await page.waitForSelector(".today");
+await page.screenshot({ path: `${OUT}/e2e-today.png` });
+// проверить переключатель дня
+await page.click(".daychip:has-text('C')");
+await page.waitForFunction(() => document.querySelector(".today__title h1")?.textContent?.includes("C"));
+await page.click(".daychip:has-text('A')");
+step(2, "переключатель дня A/B/C работает");
 await page.click(".today__cta .btn--primary");
 await page.waitForSelector(".sess");
-step(2, "старт тренировки → экран сессии");
+step(3, "старт тренировки → экран сессии");
 await page.screenshot({ path: `${OUT}/e2e-session.png` });
 
-// поднять вес степпером и записать подход
-await page.locator(".sess__steppers .stepper").first().locator(".stepper__btn").last().click({ clickCount: 8 });
-await page.click(".backbtn--0");
+// поднять число степпером и записать подход
+await page.locator(".sess__steppers .stepper").first().locator(".stepper__btn").last().click({ clickCount: 4 });
 await page.click(".sess__log");
 await page.waitForSelector(".rest", { timeout: 3000 });
-step(3, "подход записан → таймер отдыха");
+step(4, "подход записан → таймер отдыха");
 await page.screenshot({ path: `${OUT}/e2e-rest.png` });
 
 await page.click(".rest__skip");
 await page.waitForSelector(".sess__log");
 const doneRows = await page.locator(".setrow--done").count();
-step(4, `после отдыха: записанных подходов = ${doneRows}`);
+step(5, `после отдыха: записанных подходов = ${doneRows}`);
 
 // проверить, что подход реально в БД
 const inDb = await page.evaluate(async () => {
@@ -54,19 +61,42 @@ const inDb = await page.evaluate(async () => {
     };
   });
 });
-step(5, `setLogs в IndexedDB: ${inDb}`);
+step(6, `setLogs в IndexedDB: ${inDb}`);
 
 // завершить
 await page.click(".sess__end"); // "завершить"
 await page.click(".sess__end"); // "точно?"
 await page.waitForSelector(".sum");
-step(6, "завершение → итог");
+step(7, "завершение → итог");
 await page.screenshot({ path: `${OUT}/e2e-summary.png` });
 
 await page.click(".sum .btn--primary");
 await page.waitForSelector(".home");
-step(7, "вернулись на главный");
+step(8, "вернулись на главный");
+
+// вытащить id тестовой сессии, дать синку уехать
+const sessId = await page.evaluate(
+  () =>
+    new Promise((res) => {
+      const r = indexedDB.open("trenirovki");
+      r.onsuccess = () => {
+        const all = r.result.transaction("sessions", "readonly").objectStore("sessions").getAll();
+        all.onsuccess = () =>
+          res(all.result.sort((a, b) => b.startedAt - a.startedAt)[0]?.id ?? null);
+      };
+    }),
+);
+await page.evaluate(() => window.dispatchEvent(new Event("online")));
+await page.waitForTimeout(1500);
+await browser.close();
+
+// уборка в Neon: тестовая сессия и её подходы
+if (sessId && process.env.DATABASE_URL) {
+  const sql = neon(process.env.DATABASE_URL);
+  await sql`delete from set_logs where session_id = ${sessId}`;
+  await sql`delete from sessions where id = ${sessId}`;
+  step(9, `убрано из Neon: сессия ${sessId.slice(0, 8)}`);
+}
 
 console.log(errs.length ? "ОШИБКИ:\n" + errs.join("\n") : "✓ ошибок консоли нет");
-await browser.close();
 process.exit(errs.length ? 1 : 0);

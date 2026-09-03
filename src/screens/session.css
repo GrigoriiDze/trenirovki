@@ -120,20 +120,6 @@
   color: var(--text-3);
   font-weight: 400;
 }
-.setrow__back {
-  margin-left: auto;
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-3);
-}
-.setrow__back--1 {
-  color: var(--feel-1);
-}
-.setrow__back--2 {
-  color: var(--feel-2);
-}
-
 /* ── input dock ── */
 .sess__input {
   margin-top: auto;
@@ -145,39 +131,6 @@
 .sess__steppers {
   display: flex;
   gap: var(--s-3);
-}
-.sess__back {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-}
-.sess__back .label {
-  margin-right: var(--s-1);
-}
-.backbtn {
-  flex: 1;
-  min-height: var(--tap);
-  border: 1px solid var(--line-2);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
-  font-size: var(--t-md);
-  color: var(--text-2);
-  background: var(--surface);
-}
-.backbtn--on {
-  border-color: currentColor;
-}
-.backbtn--0.backbtn--on {
-  color: var(--feel-0);
-  background: color-mix(in srgb, var(--feel-0) 12%, transparent);
-}
-.backbtn--1.backbtn--on {
-  color: var(--feel-1);
-  background: color-mix(in srgb, var(--feel-1) 12%, transparent);
-}
-.backbtn--2.backbtn--on {
-  color: var(--feel-2);
-  background: color-mix(in srgb, var(--feel-2) 12%, transparent);
 }
 
 .sess__log {
