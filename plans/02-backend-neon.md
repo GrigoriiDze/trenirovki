@@ -22,32 +22,35 @@
 ## Что уже сделано (2026-09-03)
 
 - [x] `src/server/schema.ts` — Drizzle-схема, зеркало Dexie: 5 таблиц, время `bigint` epoch ms (как в клиенте), `updated_at` + `deleted` на каждой
-- [x] `src/server/migrations/0000_init.sql` — сгенерирована
+- [x] `src/server/migrations/0000_init.sql` — сгенерирована и **прогнана в Neon**
 - [x] `src/server/db.ts` — подключение к Neon для API
-- [x] `drizzle.config.ts`, `api/tsconfig.json`, скрипты `db:*`, `.env.example`
+- [x] `api/sync.ts` — эндпоинт синка, **протестирован против живой БД**
+- [x] `scripts/dev-api.mjs` — локальный мост, `scripts/test-sync.mjs` — тест
+- [x] `drizzle.config.ts`, `api/tsconfig.json`, скрипты `db:*` / `dev:api` / `test:sync`
 - [x] client-код Supabase удалён, зависимости заменены
 
 ---
 
-## Этап 0 — Проект Neon → **на Григории**
+## Этап 0 — Проект Neon
 
-- [ ] 0.1 Создать проект на neon.tech (через GitHub), регион **EU (Frankfurt)**
-- [ ] 0.2 Скопировать **Connection string** (pooled — с `-pooler` в хосте) → прислать сюда
-- [ ] 0.3 Придумать `APP_TOKEN` (`node -e "console.log(crypto.randomUUID().replace(/-/g,'')+crypto.randomUUID().replace(/-/g,''))"`) → прислать
-- [ ] 0.4 Обе строки → Vercel → Settings → Environment Variables (`DATABASE_URL`, `APP_TOKEN`), и в локальный `.env`
+- [x] 0.1 Проект на neon.tech, регион EU Frankfurt (Григорий)
+- [x] 0.2 Connection string (pooled) получен
+- [x] 0.3 `APP_TOKEN` сгенерирован
+- [x] 0.4a Локальный `.env` заполнен
+- [ ] 0.4b **`DATABASE_URL` и `APP_TOKEN` → Vercel → Settings → Environment Variables** (иначе задеплоенный `/api/sync` не работает). Значения — в сообщении. → **на Григории**
 
 ## Этап 1 — Миграция
 
-- [ ] 1.1 `npm run db:migrate` — прогнать `0000_init.sql` в Neon
-- [ ] 1.2 Проверить таблицы через `npm run db:studio`
-- [ ] 1.3 Программу v1 **не сидим отдельно** — её создаёт клиент (`seedIfNeeded`) и push-синк уносит наверх при первом соединении
+- [x] 1.1 `npm run db:migrate` — 5 таблиц созданы в Neon
+- [x] 1.2 Проверено запросом к `information_schema`
+- [x] 1.3 Программу v1 отдельно не сидим — создаёт клиент, push-синк уносит наверх
 
 ## Этап 2 — API
 
-- [ ] 2.1 `api/sync.ts` — POST, проверка `Bearer APP_TOKEN`. Тело `{ since, changes }` → pull (по таблицам, `updated_at > since`, включая `deleted`) + push (upsert по pk). Ответ `{ now, changes }`
-- [ ] 2.2 `api/_auth.ts` — общая проверка токена
-- [ ] 2.3 Локальная разработка: `vite` проксирует `/api` на `vercel dev` (или отдельный порт). Прописать в `vite.config.ts`
-- [ ] 2.4 Проверить `api/sync` курлом: пустой pull, push одной строки, повторный pull её видит
+- [x] 2.1 `api/sync.ts` — POST, `Bearer APP_TOKEN`. `{ since, push }` → upsert по pk + pull всех таблиц с `updated_at > since` (включая `deleted`). Ответ `{ now, pull }`. Web-стандартный `Request`/`Response`, работает и на Vercel Node, и в локальном мосте
+- [x] 2.2 Проверка токена — инлайн (2 строки, отдельный файл не нужен)
+- [x] 2.3 `scripts/dev-api.mjs` — локальный мост (без vercel CLI), Vite проксирует `/api` → :3001. `npm run dev:api`
+- [x] 2.4 `npm run test:sync` — проверено против живой Neon: 401 на плохой токен, пустой pull, push+pull, delta по времени, cleanup
 
 ## Этап 3 — Клиент: вход и синк
 

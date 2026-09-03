@@ -98,6 +98,20 @@
 
 **Решение:** программу v1 в Postgres отдельным сидом НЕ заливаем. Её создаёт клиент (`seedIfNeeded`), push-синк уносит наверх при первом соединении. Один путь сидинга.
 
-**Ждёт Григория:** проект Neon (EU/Frankfurt) → connection string + придуманный `APP_TOKEN` → в Vercel env и `.env`. Дальше — миграция, `api/sync`, экран входа, движок синка.
-
 **Порядок:** план 02 (бэкенд) → возврат в план 01 на 1.3 + этап 2.
+
+---
+
+## 2026-09-03 — Neon подключён, api/sync работает
+
+Григорий прислал connection string (Neon, EU Frankfurt, pooled). `APP_TOKEN` сгенерировал сам.
+
+- Миграция прогнана в Neon (`npm run db:migrate`), 5 таблиц на месте.
+- `api/sync.ts` — web-стандартный `Request`/`Response` handler (работает и на Vercel Node runtime, и в локальном мосте без vercel CLI). Auth `Bearer APP_TOKEN` инлайн. `{since, push}` → upsert по pk + pull всех таблиц с `updated_at > since`.
+- `scripts/dev-api.mjs` — локальный HTTP-мост под `/api`, Vite проксирует туда (`npm run dev:api`). `scripts/test-sync.mjs` (`npm run test:sync`) — проверено против живой БД: 401, пустой pull, push+pull, delta по времени.
+- **Мина:** raw Node ESM + type-stripping требует `.ts` в путях импорта серверного кода (`../src/server/db.ts`, не `../src/server/db`). Vercel-бандлер и так проглотил бы, но локальный запуск — нет.
+- **Мина:** `api/tsconfig.json` через `extends` наследует `exclude` родителя — надо явно `"exclude": []`, иначе «No inputs found».
+
+**Ждёт Григория:** добавить `DATABASE_URL` и `APP_TOKEN` в Vercel env (иначе задеплоенный `/api/sync` не отвечает). Значения даны в чате — там же напоминание про ротацию пароля БД, раз он засветился в переписке.
+
+**Дальше:** клиентский движок синка (`src/sync/`) + экран ввода кода + вклейка в `App`. Потом Dexie-схема получает `updatedAt`/`deleted` (v2) для delta-синка.
