@@ -2,6 +2,7 @@ node_modules/
 dist/
 dev-dist/
 .vite/
+*.tsbuildinfo
 *.local
 .env
 .env.*
