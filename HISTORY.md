@@ -84,12 +84,20 @@
 
 На вопрос «что дальше» выбрал **бэкенд первым** (не ядро тренировок, не Тело). Логика — фундамент под систему здоровья сразу, чтобы не строить хранилище дважды.
 
-**Сделано в эту сессию:**
-- `plans/02-backend-supabase.md` — план: Supabase (Postgres + Storage + Auth), local-first синк, Dexie остаётся локальным слоем.
-- `supabase/migrations/0001_init.sql` — схема-зеркало Dexie + `user_id`/`updated_at`/`deleted`, RLS «только свои», триггеры.
-- `src/db/supabase.ts` — клиент-синглтон, `backendConfigured` флаг (до заполнения env приложение чисто локальное).
-- `@supabase/supabase-js`, `.env.example`, типы env.
+**Бэкенд: сначала Supabase, потом переиграли на Neon.** Григорий: Supabase на free засыпает на 7 дней, будится руками. Neon уходит в ноль при простое, но просыпается сам за ~0.5 сек — для local-first (синк фоновый, не на горячем пути) это решает вопрос.
 
-**Ждёт Григория:** создать проект Supabase (EU/Frankfurt), прислать URL + anon key + service_role key. Дальше — миграция, сид, экран входа, слой синка.
+Цена обмена: Supabase давал auth + storage + client SDK с RLS. Neon — только Postgres. Значит свой тонкий API-слой на Vercel Functions (`api/*`) + простой вход по коду (`APP_TOKEN` в env, вводится один раз). Для системы с агентами API-слой всё равно был бы нужен.
 
-**Порядок теперь:** план 02 (бэкенд) → возврат в план 01 на 1.3 (запуск сессии) + этап 2 (экран активной тренировки).
+**Сделано:**
+- `plans/02-backend-neon.md`.
+- `src/server/schema.ts` — Drizzle-схема, зеркало Dexie. Время везде `bigint` epoch ms — как в клиенте, без конвертации TZ. `updated_at` + `deleted` на каждой таблице для синка. Без `user_id` — один пользователь.
+- `src/server/migrations/0000_init.sql` — сгенерирована `drizzle-kit`.
+- `src/server/db.ts` — Neon через `@neondatabase/serverless` (HTTP).
+- `drizzle.config.ts`, `api/tsconfig.json` (серверный код исключён из клиентского билда), скрипты `db:*`.
+- Supabase-код и зависимость удалены.
+
+**Решение:** программу v1 в Postgres отдельным сидом НЕ заливаем. Её создаёт клиент (`seedIfNeeded`), push-синк уносит наверх при первом соединении. Один путь сидинга.
+
+**Ждёт Григория:** проект Neon (EU/Frankfurt) → connection string + придуманный `APP_TOKEN` → в Vercel env и `.env`. Дальше — миграция, `api/sync`, экран входа, движок синка.
+
+**Порядок:** план 02 (бэкенд) → возврат в план 01 на 1.3 + этап 2.
