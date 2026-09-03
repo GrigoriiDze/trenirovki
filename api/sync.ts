@@ -7,8 +7,9 @@
    push — upsert по первичному ключу (last-write-wins, один пользователь).
    pull — все строки с updated_at > since, включая deleted:true. */
 
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { gt } from "drizzle-orm";
-import { db, schema } from "../src/server/db.ts";
+import { getDb, schema } from "../src/server/db.ts";
 
 const TABLES = {
   exercises: schema.exercises,
@@ -19,58 +20,50 @@ const TABLES = {
 } as const;
 
 type TableName = keyof typeof TABLES;
+const NAMES = Object.keys(TABLES) as TableName[];
 
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "content-type": "application/json" },
-  });
+export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "use POST" });
+    return;
+  }
 
-export async function POST(request: Request): Promise<Response> {
   const token = process.env.APP_TOKEN;
-  if (!token || request.headers.get("authorization") !== `Bearer ${token}`) {
-    return json({ error: "unauthorized" }, 401);
+  if (!token || req.headers.authorization !== `Bearer ${token}`) {
+    res.status(401).json({ error: "unauthorized" });
+    return;
   }
 
-  let body: { since?: number; push?: Partial<Record<TableName, Record<string, unknown>[]>> };
   try {
-    body = await request.json();
-  } catch {
-    return json({ error: "bad json" }, 400);
-  }
+    const body =
+      typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body ?? {});
+    const since = typeof body.since === "number" ? body.since : 0;
+    const push: Partial<Record<TableName, Record<string, unknown>[]>> = body.push ?? {};
 
-  const since = typeof body.since === "number" ? body.since : 0;
-  const push = body.push ?? {};
+    const db = getDb();
 
-  // ── PUSH ──────────────────────────────────────────────
-  for (const name of Object.keys(TABLES) as TableName[]) {
-    const rows = push[name];
-    if (!rows?.length) continue;
-    const table = TABLES[name];
-    for (const row of rows) {
-      await db
-        .insert(table)
-        .values(row as never)
-        .onConflictDoUpdate({ target: table.id, set: row as never });
+    // ── PUSH ──
+    for (const name of NAMES) {
+      const rows = push[name];
+      if (!rows?.length) continue;
+      const table = TABLES[name];
+      for (const row of rows) {
+        await db
+          .insert(table)
+          .values(row as never)
+          .onConflictDoUpdate({ target: table.id, set: row as never });
+      }
     }
+
+    // ── PULL ──
+    const pull = {} as Record<TableName, unknown[]>;
+    for (const name of NAMES) {
+      pull[name] = await db.select().from(TABLES[name]).where(gt(TABLES[name].updatedAt, since));
+    }
+
+    res.status(200).json({ now: Date.now(), pull });
+  } catch (e) {
+    console.error("sync error", e);
+    res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
   }
-
-  // ── PULL ──────────────────────────────────────────────
-  const pull: Record<TableName, unknown[]> = {
-    exercises: [],
-    programVersions: [],
-    programSlots: [],
-    sessions: [],
-    setLogs: [],
-  };
-  for (const name of Object.keys(TABLES) as TableName[]) {
-    const table = TABLES[name];
-    pull[name] = await db.select().from(table).where(gt(table.updatedAt, since));
-  }
-
-  return json({ now: Date.now(), pull });
-}
-
-export function GET(): Response {
-  return json({ error: "use POST" }, 405);
 }
