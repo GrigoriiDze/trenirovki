@@ -73,6 +73,13 @@
   font-size: var(--t-sm);
   color: var(--text-2);
 }
+.drow__note {
+  margin: 0;
+  font-size: var(--t-sm);
+  line-height: 1.5;
+  color: var(--text-3);
+  white-space: pre-line;
+}
 .drow__ex {
   list-style: none;
   margin: 0;

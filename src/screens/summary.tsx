@@ -35,7 +35,7 @@ export function Summary({
   return (
     <main class="sum">
       <header class="sum__head">
-        <div class="label">Готово · День {session.day}</div>
+        <div class="label">Готово{session.day ? ` · День ${session.day}` : ""}</div>
         <h1>Тренировка записана</h1>
         <p class="sum__stats num">
           {nSets} {plural(nSets, ["подход", "подхода", "подходов"])}

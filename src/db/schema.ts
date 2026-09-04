@@ -105,9 +105,11 @@ export interface ProgramSlot extends Synced {
 export interface Session extends Synced {
   id: string;               // uuid
   versionId: string;        // -> ProgramVersion.id (замораживается на старте)
-  day: DayCode;
+  day: DayCode | null;      // null — свободная / импортированная сессия вне ротации
   startedAt: number;
   finishedAt: number | null;
+  source: "app" | "import"; // import — залито из исторического дневника (context/07)
+  note: string | null;      // заметка: кардио, разминка, «хаотичная тренировка» из импорта
 }
 
 /** Упражнение в конкретной сессии. Сессия — НЕ проекция программы:
@@ -282,6 +284,15 @@ db.version(5).stores({}).upgrade(async (tx) => {
       row.muscle = m;
       row.updatedAt = now;
     }
+  });
+});
+
+// v6: Session.source + Session.note + day становится nullable.
+// Нужно для импорта исторического дневника (план 03, этап C).
+db.version(6).stores({}).upgrade(async (tx) => {
+  await tx.table("sessions").toCollection().modify((row: Record<string, unknown>) => {
+    if (row.source === undefined) row.source = "app";
+    if (row.note === undefined) row.note = null;
   });
 });
 

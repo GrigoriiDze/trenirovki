@@ -22,6 +22,8 @@ export async function startSession(day: DayCode, versionId: string): Promise<Ses
     day,
     startedAt: Date.now(),
     finishedAt: null,
+    source: "app",
+    note: null,
   };
   await putRow("sessions", s);
 

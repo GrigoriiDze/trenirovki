@@ -76,7 +76,8 @@ export function Diary({
               <li class="drow" key={s.id}>
                 <button class="drow__head" onClick={() => setOpenId(open ? null : s.id)}>
                   <span class="drow__date">
-                    {DATE_FMT.format(new Date(s.startedAt))} · День {s.day}
+                    {DATE_FMT.format(new Date(s.startedAt))}
+                    {s.day ? ` · День ${s.day}` : s.source === "import" ? " · импорт" : ""}
                   </span>
                   <span class="drow__sub num">
                     {ls.length} {plural(ls.length, ["подход", "подхода", "подходов"])}
@@ -87,7 +88,8 @@ export function Diary({
 
                 {open ? (
                   <div class="drow__body">
-                    <p class="drow__title">{DAY_TITLES[s.day]}</p>
+                    {s.day ? <p class="drow__title">{DAY_TITLES[s.day]}</p> : null}
+                    {s.note ? <p class="drow__note">{s.note}</p> : null}
                     <ul class="drow__ex">
                       {[...byEx].map(([exId, exls]) => (
                         <li key={exId}>

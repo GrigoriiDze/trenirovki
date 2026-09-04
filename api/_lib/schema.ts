@@ -65,9 +65,11 @@ export const sessions = pgTable(
   {
     id: text("id").primaryKey(), // uuid
     versionId: text("version_id").notNull(),
-    day: text("day").notNull(),
+    day: text("day"), // nullable — свободная / импортированная сессия
     startedAt: bigint("started_at", { mode: "number" }).notNull(),
     finishedAt: bigint("finished_at", { mode: "number" }),
+    source: text("source").notNull().default("app"), // app | import
+    note: text("note"),
     updatedAt: bigint("updated_at", { mode: "number" }).notNull(),
     deleted: boolean("deleted").notNull().default(false),
   },

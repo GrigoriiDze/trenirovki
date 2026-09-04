@@ -13,5 +13,8 @@ shots/
 test-results/
 playwright-report/
 
+# промежуточный разбор импорта истории (scripts/import-history.ts --> регенерируется)
+scripts/_history-parsed.json
+
 .DS_Store
 Thumbs.db
