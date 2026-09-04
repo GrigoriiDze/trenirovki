@@ -3,7 +3,7 @@ import type { ComponentChildren } from "preact";
 import { useLive } from "~/lib/live";
 import { nextDay } from "~/lib/rotation";
 import { db, type DayCode, type Exercise } from "~/db/schema";
-import { seedIfNeeded } from "~/db/seed";
+import { seedIfNeeded, syncCatalog } from "~/db/seed";
 import { DAY_TITLES, DAY_NOTES } from "~/data/program-v1";
 import { getToken } from "~/sync/client";
 import { runSync, startAutoSync } from "~/sync/engine";
@@ -60,6 +60,7 @@ function Shell() {
     (async () => {
       await runSync().catch(() => {});
       await seedIfNeeded();
+      await syncCatalog();
       setReady(true);
       stop = startAutoSync();
     })();

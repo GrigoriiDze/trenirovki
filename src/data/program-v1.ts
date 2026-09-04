@@ -8,7 +8,7 @@ import type { DayCode, Exercise, Origin } from "~/db/schema";
 
 /** Упражнение без полей синхронизации — их проставит seed.
  *  load по умолчанию "weight", указываем только исключения. */
-type ExerciseSeed = Omit<Exercise, "updatedAt" | "deleted" | "gifUrl" | "load"> & {
+export type ExerciseSeed = Omit<Exercise, "updatedAt" | "deleted" | "gifUrl" | "load"> & {
   gifUrl?: string | null;
   load?: Exercise["load"];
 };
@@ -67,7 +67,7 @@ export const EXERCISES: ExerciseSeed[] = [
     id: "back-extension-45",
     nameRu: "Гиперэкстензия 45°",
     nameEn: "45° back extension",
-    muscle: "разгибатели спины",
+    muscle: "поясница",
     equipment: "тренажёр",
     rom: "full",
     restSec: 60,
@@ -107,7 +107,7 @@ export const EXERCISES: ExerciseSeed[] = [
     id: "hip-abduction",
     nameRu: "Отведение бедра в тренажёре",
     nameEn: "hip abduction machine",
-    muscle: "средняя ягодичная",
+    muscle: "ягодицы",
     equipment: "тренажёр",
     rom: "full",
     restSec: 60,
@@ -117,7 +117,7 @@ export const EXERCISES: ExerciseSeed[] = [
     id: "hip-adduction",
     nameRu: "Сведение бёдер в тренажёре",
     nameEn: "hip adduction machine",
-    muscle: "приводящие бедра",
+    muscle: "приводящие",
     equipment: "тренажёр",
     rom: "full",
     restSec: 60,
@@ -255,7 +255,7 @@ export const EXERCISES: ExerciseSeed[] = [
     id: "y-raise-incline",
     nameRu: "Y-подъём лёжа на наклонной",
     nameEn: "prone incline Y-raise",
-    muscle: "нижняя трапеция",
+    muscle: "трапеция",
     equipment: "гантели",
     rom: "full",
     restSec: 60,

@@ -385,22 +385,37 @@ function ManageSheet({
         </ol>
 
         <p class="sheet__sub">Добавить</p>
-        <ol class="sheet__add">
-          {addable.map((e) => (
-            <li key={e.id}>
-              <button
-                onClick={() => {
-                  void addExercise(session.id, e.id);
-                  onClose();
-                }}
-              >
-                <span class="sheet__addname">{e.nameRu}</span>
-                <span class="sheet__addmus">{e.muscle}</span>
-              </button>
-            </li>
-          ))}
-        </ol>
+        {groupByMuscle(addable).map(([muscle, list]) => (
+          <div class="sheet__group" key={muscle}>
+            <p class="sheet__muscle">{muscle}</p>
+            <ol class="sheet__add">
+              {list.map((e) => (
+                <li key={e.id}>
+                  <button
+                    onClick={() => {
+                      void addExercise(session.id, e.id);
+                      onClose();
+                    }}
+                  >
+                    {e.nameRu}
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))}
       </div>
     </div>
   );
+}
+
+/** addable уже отсортирован по мышце → соседние с одной группой в один блок. */
+function groupByMuscle(list: Exercise[]): [string, Exercise[]][] {
+  const groups: [string, Exercise[]][] = [];
+  for (const e of list) {
+    const last = groups[groups.length - 1];
+    if (last && last[0] === e.muscle) last[1].push(e);
+    else groups.push([e.muscle, [e]]);
+  }
+  return groups;
 }

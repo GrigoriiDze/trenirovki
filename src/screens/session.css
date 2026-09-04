@@ -332,28 +332,29 @@
   text-transform: uppercase;
   color: var(--text-3);
 }
+.sheet__group {
+  margin-bottom: var(--s-3);
+}
+.sheet__muscle {
+  position: sticky;
+  top: 0;
+  margin: 0;
+  padding: var(--s-1) 0;
+  background: var(--surface);
+  font-size: var(--t-xs);
+  color: var(--text-3);
+}
 .sheet__add {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 .sheet__add button {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s-3);
   width: 100%;
   text-align: left;
   min-height: var(--tap);
   padding: var(--s-2) 0;
-  border-bottom: 1px solid var(--line);
-}
-.sheet__addname {
   font-size: var(--t-sm);
   color: var(--text);
-}
-.sheet__addmus {
-  font-size: var(--t-xs);
-  color: var(--text-3);
-  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
 }

@@ -10,6 +10,7 @@ import {
   PROGRAM_NAME,
   PROGRAM_VERSION_ID,
 } from "~/data/program-v1";
+import { EXERCISES_EXTRA } from "~/data/exercises-extra";
 
 export async function seedIfNeeded(): Promise<void> {
   const existing = await db.programVersions.get(PROGRAM_VERSION_ID);
@@ -17,7 +18,11 @@ export async function seedIfNeeded(): Promise<void> {
 
   await putRows(
     "exercises",
-    EXERCISES.map((e) => ({ ...e, gifUrl: e.gifUrl ?? null, load: e.load ?? "weight" })),
+    [...EXERCISES, ...EXERCISES_EXTRA].map((e) => ({
+      ...e,
+      gifUrl: e.gifUrl ?? null,
+      load: e.load ?? "weight",
+    })),
   );
 
   await putRows("programVersions", [
@@ -45,4 +50,22 @@ export async function seedIfNeeded(): Promise<void> {
     })),
   );
   await putRows("programSlots", slots);
+}
+
+/* Справочник = канон в коде. seedIfNeeded заливает его один раз при
+   первом запуске; для уже засиденных баз новые упражнения из кода
+   добавляем здесь (только отсутствующие — свои правки не трогаем).
+   Гоняется каждый старт после seedIfNeeded. */
+export async function syncCatalog(): Promise<void> {
+  const all = [...EXERCISES, ...EXERCISES_EXTRA];
+  const present = new Set(
+    (await db.exercises.bulkGet(all.map((e) => e.id))).filter(Boolean).map((e) => e!.id),
+  );
+  const missing = all.filter((e) => !present.has(e.id));
+  if (missing.length) {
+    await putRows(
+      "exercises",
+      missing.map((e) => ({ ...e, gifUrl: e.gifUrl ?? null, load: e.load ?? "weight" })),
+    );
+  }
 }

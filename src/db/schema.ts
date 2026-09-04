@@ -27,6 +27,27 @@ export type DayCode = "A" | "B" | "C";
 /** Режим амплитуды — правило исполнения, не украшение (см. context/03). */
 export type Rom = "full" | "lengthened" | "short" | "iso";
 
+/** Мышечная группа — контролируемый словарь для аналитики (недельный
+ *  объём по группам, план 03 этап E). Одно значение на упражнение —
+ *  основная целевая группа. Вторичные не ведём, пока нет запроса. */
+export type MuscleGroup =
+  | "грудь"
+  | "широчайшие"
+  | "верх спины"
+  | "трапеция"
+  | "поясница"
+  | "передняя дельта"
+  | "средняя дельта"
+  | "задняя дельта"
+  | "бицепс"
+  | "трицепс"
+  | "квадрицепс"
+  | "бицепс бедра"
+  | "ягодицы"
+  | "приводящие"
+  | "икры"
+  | "кор";
+
 /** Как измеряется подход, определяет поля ввода:
  *    weight — внешний вес: степперы кг + повторы
  *    bw     — вес тела: только повторы
@@ -51,7 +72,7 @@ export interface Exercise extends Synced {
   id: string;               // стабильный слаг: "lying-leg-curl"
   nameRu: string;
   nameEn: string;
-  muscle: string;           // основная целевая группа (для будущей аналитики)
+  muscle: MuscleGroup;      // основная целевая группа (аналитика по объёму)
   equipment: string;
   rom: Rom;
   load: Load;               // режим ввода подхода
@@ -244,6 +265,25 @@ db.version(4)
     }
     if (rows.length) await tx.table("sessionExercises").bulkAdd(rows);
   });
+
+// v5: muscle приведён к контролируемому словарю MuscleGroup —
+// ремап старых значений на существующих строках (см. B.2 плана 03).
+const MUSCLE_REMAP: Record<string, string> = {
+  "разгибатели спины": "поясница",
+  "средняя ягодичная": "ягодицы",
+  "приводящие бедра": "приводящие",
+  "нижняя трапеция": "трапеция",
+};
+db.version(5).stores({}).upgrade(async (tx) => {
+  const now = Date.now();
+  await tx.table("exercises").toCollection().modify((row: Record<string, unknown>) => {
+    const m = MUSCLE_REMAP[row.muscle as string];
+    if (m) {
+      row.muscle = m;
+      row.updatedAt = now;
+    }
+  });
+});
 
 /** Имена синхронизируемых таблиц (без syncMeta). */
 export const SYNC_TABLES = [
