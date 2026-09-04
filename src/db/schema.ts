@@ -89,6 +89,28 @@ export interface Session extends Synced {
   finishedAt: number | null;
 }
 
+/** Упражнение в конкретной сессии. Сессия — НЕ проекция программы:
+ *  на старте сюда копируются слоты дня, дальше список правится руками
+ *  (добавить/убрать/переставить), программа при этом не меняется.
+ *
+ *    id       = `${sessionId}:${exerciseId}` — упражнение в сессии одно
+ *    source   plan — пришло из программы дня; added — добавлено в зале
+ *    skipped  убрано из сессии (A.5), в программе остаётся
+ *    target*  снимок цели со слота на момент старта (заморожен, как versionId).
+ *             null у добавленных — «сам решаешь сколько». */
+export interface SessionExercise extends Synced {
+  id: string;
+  sessionId: string;        // -> Session.id
+  exerciseId: string;       // -> Exercise.id
+  ord: number;              // позиция в сессии, с 1
+  source: "plan" | "added";
+  skipped: boolean;
+  targetSets: number | null;
+  repLow: number | null;
+  repHigh: number | null;
+  perSide: boolean;
+}
+
 export interface SetLog extends Synced {
   id: string;               // uuid
   sessionId: string;        // -> Session.id
@@ -112,6 +134,7 @@ export const db = new Dexie("trenirovki") as Dexie & {
   programVersions: EntityTable<ProgramVersion, "id">;
   programSlots: EntityTable<ProgramSlot, "id">;
   sessions: EntityTable<Session, "id">;
+  sessionExercises: EntityTable<SessionExercise, "id">;
   setLogs: EntityTable<SetLog, "id">;
   syncMeta: EntityTable<SyncMeta, "id">;
 };
@@ -161,12 +184,74 @@ db.version(3).stores({}).upgrade(async (tx) => {
   });
 });
 
+// v4: sessionExercises — сессия перестаёт быть проекцией программы.
+// Задним числом достраиваем список для всех существующих сессий из
+// уже сохранённых слотов их версии/дня + упражнений из их же подходов.
+db.version(4)
+  .stores({
+    sessionExercises: "id, sessionId, [sessionId+ord], exerciseId, updatedAt",
+  })
+  .upgrade(async (tx) => {
+    const now = Date.now();
+    const [sessions, slots, logs] = await Promise.all([
+      tx.table("sessions").toArray(),
+      tx.table("programSlots").toArray(),
+      tx.table("setLogs").toArray(),
+    ]);
+    const rows: Record<string, unknown>[] = [];
+    for (const s of sessions) {
+      const planned = slots
+        .filter((sl) => !sl.deleted && sl.versionId === s.versionId && sl.day === s.day)
+        .sort((a, b) => a.ord - b.ord);
+      const seen = new Set<string>();
+      let ord = 1;
+      for (const sl of planned) {
+        seen.add(sl.exerciseId);
+        rows.push({
+          id: `${s.id}:${sl.exerciseId}`,
+          sessionId: s.id,
+          exerciseId: sl.exerciseId,
+          ord: ord++,
+          source: "plan",
+          skipped: false,
+          targetSets: sl.targetSets,
+          repLow: sl.repLow,
+          repHigh: sl.repHigh,
+          perSide: sl.perSide,
+          updatedAt: now,
+          deleted: false,
+        });
+      }
+      // упражнения, которых в программе нет, но подходы по ним есть
+      for (const l of logs) {
+        if (l.sessionId !== s.id || l.deleted || seen.has(l.exerciseId)) continue;
+        seen.add(l.exerciseId);
+        rows.push({
+          id: `${s.id}:${l.exerciseId}`,
+          sessionId: s.id,
+          exerciseId: l.exerciseId,
+          ord: ord++,
+          source: "added",
+          skipped: false,
+          targetSets: null,
+          repLow: null,
+          repHigh: null,
+          perSide: false,
+          updatedAt: now,
+          deleted: false,
+        });
+      }
+    }
+    if (rows.length) await tx.table("sessionExercises").bulkAdd(rows);
+  });
+
 /** Имена синхронизируемых таблиц (без syncMeta). */
 export const SYNC_TABLES = [
   "exercises",
   "programVersions",
   "programSlots",
   "sessions",
+  "sessionExercises",
   "setLogs",
 ] as const;
 export type SyncTableName = (typeof SYNC_TABLES)[number];

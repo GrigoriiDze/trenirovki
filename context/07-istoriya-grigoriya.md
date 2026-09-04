@@ -252,7 +252,7 @@ Triceps Rope Pushdown 48 kg 8, 8, 8, 8
 | Трапеция | `shrug` (новый) |
 | Seated leg press, Seated Leg Press | `leg-press` |
 | Hip abduction, Hip Adduction (разведение) | `hip-abduction` |
-| Glute | `glute-machine` (новый — уточнить у Григория, что за тренажёр) |
+| Glute | `hip-abduction` (Григорий 2026-09-04: «разведение ног в тренажёре»). ⚠️ 03.05 и 17.05 `Glute` и `Hip abduction` в один день — проверить, не сведение ли одна из них |
 | Hip adduction, Hip Adduction (сведение) | `hip-adduction` |
 | Chest-Supported Row | `chest-supported-row` (новый) |
 | Incline Dumbbell Press | `incline-db-press` |

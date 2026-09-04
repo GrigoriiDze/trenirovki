@@ -8,7 +8,7 @@ import { DAY_TITLES, DAY_NOTES } from "~/data/program-v1";
 import { getToken } from "~/sync/client";
 import { runSync, startAutoSync } from "~/sync/engine";
 import { useSyncState } from "~/sync/use-sync";
-import { openSession, startSession } from "~/session/store";
+import { openSession, sessionExercises, startSession } from "~/session/store";
 import { Home } from "~/screens/home";
 import { Today } from "~/screens/today";
 import { Session } from "~/screens/session";
@@ -74,7 +74,7 @@ function Shell() {
   const day = pickedDay ?? suggested ?? null;
 
   const todaySlots = useLive(async () => (day ? slotsFor("v1", day) : []), [day]);
-  const sessSlots = useLive(async () => (open ? slotsFor(open.versionId, open.day) : []), [open?.id]);
+  const sessItems = useLive(async () => (open ? sessionExercises(open.id) : []), [open?.id]);
 
   if (!ready || !day || !suggested || !exercises || !todaySlots) {
     return <div class="boot">загрузка…</div>;
@@ -85,12 +85,13 @@ function Shell() {
   let screen: ComponentChildren;
   let key: string = route.name;
 
-  if (route.name === "session" && open && sessSlots?.length) {
+  if (route.name === "session" && open && sessItems) {
     screen = (
       <Session
         session={open}
-        slots={sessSlots}
+        items={sessItems}
         exerciseById={byId}
+        allExercises={exercises}
         onExit={() => setRoute({ name: "home" })}
         onFinish={() => setRoute({ name: "summary", sessionId: open.id })}
       />

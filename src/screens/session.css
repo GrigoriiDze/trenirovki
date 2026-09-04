@@ -175,17 +175,185 @@
   filter: brightness(0.9);
   box-shadow: 0 1px 4px -2px var(--accent);
 }
-.sess__finish {
+/* переход к следующему упражнению / завершение — всегда на виду */
+.sess__next {
   min-height: var(--tap);
   border-radius: var(--radius);
   border: 1px solid var(--line-2);
   color: var(--text-2);
   font-size: var(--t-md);
   font-weight: 600;
+  padding: 0 var(--s-3);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.sess__next--go {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.sess__next:active {
+  background: var(--surface-2);
+}
+.sess__manage {
+  min-height: var(--tap);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  color: var(--text-3);
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+.sess__manage:active {
+  background: var(--surface-2);
 }
 
+/* пустая сессия — всё убрано */
+.sess__empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-4);
+  color: var(--text-3);
+  font-size: var(--t-sm);
+}
+.sess__addbig {
+  min-height: var(--tap);
+  padding: 0 var(--s-4);
+  border-radius: var(--radius);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: var(--t-md);
+  font-weight: 600;
+}
+
+/* ── лист управления упражнениями ── */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  animation: sheet-fade 0.18s ease-out;
+}
+.sheet__panel {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: var(--radius) var(--radius) 0 0;
+  border-top: 1px solid var(--line-2);
+  box-shadow: 0 -8px 32px -12px rgba(0, 0, 0, 0.6);
+  padding: var(--s-4) var(--s-4) calc(var(--s-5) + env(safe-area-inset-bottom));
+  animation: sheet-up 0.22s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+@keyframes sheet-fade {
+  from { opacity: 0; }
+}
+@keyframes sheet-up {
+  from { transform: translateY(12%); }
+}
 @media (prefers-reduced-motion: reduce) {
-  .sess__log:active {
-    transform: none;
-  }
+  .sess__log:active { transform: none; }
+  .sheet__panel { animation: sheet-fade 0.14s ease-out; }
+}
+
+.sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s-3);
+}
+.sheet__close {
+  min-height: var(--tap);
+  min-width: var(--tap);
+  color: var(--text-3);
+  font-size: var(--t-lg);
+}
+.sheet__cur {
+  list-style: none;
+  margin: 0 0 var(--s-4);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+.sheet__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+  padding: var(--s-1) 0;
+}
+.sheet__name {
+  flex: 1;
+  text-align: left;
+  font-size: var(--t-sm);
+  color: var(--text);
+  padding: var(--s-2) 0;
+  min-height: var(--tap);
+}
+.sheet__item--on .sheet__name {
+  color: var(--accent);
+  font-weight: 600;
+}
+.sheet__ctl {
+  display: flex;
+  gap: var(--s-1);
+}
+.sheet__ctl button {
+  min-height: var(--tap);
+  min-width: 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  color: var(--text-2);
+  font-size: var(--t-md);
+}
+.sheet__ctl button:disabled {
+  opacity: 0.25;
+}
+.sheet__deny {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: var(--t-xs);
+  color: var(--feel-2);
+}
+.sheet__sub {
+  margin: 0 0 var(--s-2);
+  font-size: var(--t-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.sheet__add {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sheet__add button {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  width: 100%;
+  text-align: left;
+  min-height: var(--tap);
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--line);
+}
+.sheet__addname {
+  font-size: var(--t-sm);
+  color: var(--text);
+}
+.sheet__addmus {
+  font-size: var(--t-xs);
+  color: var(--text-3);
+  white-space: nowrap;
 }

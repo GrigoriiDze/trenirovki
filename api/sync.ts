@@ -19,6 +19,7 @@ const TABLES = {
   programVersions: schema.programVersions,
   programSlots: schema.programSlots,
   sessions: schema.sessions,
+  sessionExercises: schema.sessionExercises,
   setLogs: schema.setLogs,
 } as const;
 

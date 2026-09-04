@@ -74,6 +74,27 @@ export const sessions = pgTable(
   (t) => [index("sessions_started").on(t.startedAt)],
 );
 
+/* Упражнение в сессии — зеркало src/db/schema.ts SessionExercise.
+   Сессия не проекция программы: список правится в зале. */
+export const sessionExercises = pgTable(
+  "session_exercises",
+  {
+    id: text("id").primaryKey(), // `${sessionId}:${exerciseId}`
+    sessionId: text("session_id").notNull(),
+    exerciseId: text("exercise_id").notNull(),
+    ord: integer("ord").notNull(),
+    source: text("source").notNull(), // plan | added
+    skipped: boolean("skipped").notNull().default(false),
+    targetSets: integer("target_sets"),
+    repLow: integer("rep_low"),
+    repHigh: integer("rep_high"),
+    perSide: boolean("per_side").notNull().default(false),
+    updatedAt: bigint("updated_at", { mode: "number" }).notNull(),
+    deleted: boolean("deleted").notNull().default(false),
+  },
+  (t) => [index("session_exercises_session").on(t.sessionId)],
+);
+
 /* ⚠ exerciseId ссылается на exercises напрямую, не на слот (см. CLAUDE.md) */
 export const setLogs = pgTable(
   "set_logs",
@@ -101,6 +122,7 @@ export const SYNC_TABLES = [
   "programVersions",
   "programSlots",
   "sessions",
+  "sessionExercises",
   "setLogs",
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];

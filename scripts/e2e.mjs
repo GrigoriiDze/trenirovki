@@ -48,6 +48,20 @@ await page.waitForSelector(".sess");
 step(3, "старт тренировки → экран сессии");
 await page.screenshot({ path: `${OUT}/e2e-session${SUF}.png` });
 
+// A.4/A.6 — лист управления: добавить упражнение, проверить рост списка
+const cntBefore = await page.locator(".sess__count").innerText();
+await page.click(".sess__manage");
+await page.waitForSelector(".sheet__panel");
+await page.waitForTimeout(350); // дать листу доехать до конца анимации
+await page.screenshot({ path: `${OUT}/e2e-manage${SUF}.png` });
+await page.locator(".sheet__add button").first().click();
+await page.waitForSelector(".sheet__panel", { state: "detached" });
+await page.waitForFunction(
+  (before) => document.querySelector(".sess__count")?.textContent !== before,
+  cntBefore,
+);
+step(3.5, `список упражнений сессии вырос: "${cntBefore}" → "${await page.locator(".sess__count").innerText()}"`);
+
 // поднять число степпером и записать подход
 await page.locator(".sess__steppers .stepper").first().locator(".stepper__btn").last().click({ clickCount: 4 });
 await page.click(".sess__log");
@@ -59,6 +73,16 @@ await page.click(".rest__skip");
 await page.waitForSelector(".sess__log");
 const doneRows = await page.locator(".setrow--done").count();
 step(5, `после отдыха: записанных подходов = ${doneRows}`);
+
+// переход к следующему упражнению кнопкой «Дальше»
+const exBefore = await page.locator(".sess__ex h1").innerText();
+await page.click(".sess__next");
+await page.waitForFunction(
+  (b) => document.querySelector(".sess__ex h1")?.textContent !== b,
+  exBefore,
+);
+step(5.5, `«Дальше» переключает упражнение: "${exBefore}" → "${await page.locator(".sess__ex h1").innerText()}"`);
+await page.locator(".sess__arrow").first().click(); // вернуться назад для проверки БД
 
 // проверить, что подход реально в БД
 const inDb = await page.evaluate(async () => {
