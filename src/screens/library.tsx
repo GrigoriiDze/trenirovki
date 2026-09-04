@@ -80,6 +80,11 @@ export function Library({
           ))}
         </ol>
       )}
+
+      <p class="lib__credit">
+        Иллюстрации техники — <a href="https://wger.de" target="_blank" rel="noreferrer">wger.de</a>,
+        CC BY-SA 4.0 / CC0
+      </p>
     </main>
   );
 }

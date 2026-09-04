@@ -32,7 +32,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
+        // jpg добавлен ради иллюстраций техники (public/exercises) — часть
+        // источников отдаёт jpg, не png
+        globPatterns: ["**/*.{js,css,html,svg,png,jpg,woff2}"],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,

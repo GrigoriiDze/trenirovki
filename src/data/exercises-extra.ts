@@ -21,6 +21,7 @@ export const EXERCISES_EXTRA: ExerciseSeed[] = [
     equipment: "блок",
     rom: "full",
     restSec: 90,
+    gifUrl: "/exercises/lat-pulldown.png",
     cue: "Обычный хват, плечи опущены, локти вниз-назад. Вверху дай лопатке подняться и растянуть широчайшую, внизу не заваливай корпус.",
   },
   {
@@ -31,6 +32,7 @@ export const EXERCISES_EXTRA: ExerciseSeed[] = [
     equipment: "блок",
     rom: "full",
     restSec: 90,
+    gifUrl: "/exercises/seated-cable-row.png",
     cue: "Спина нейтральная, тянешь локтями вдоль корпуса. В конце сведи лопатки, не откидывайся назад поясницей.",
   },
   {
@@ -51,6 +53,7 @@ export const EXERCISES_EXTRA: ExerciseSeed[] = [
     equipment: "штанга",
     rom: "full",
     restSec: 90,
+    gifUrl: "/exercises/t-bar-row.png",
     cue: "Спина жёстко нейтральная, наклон от таза. Осевой нагрузки нет только если корпус в упоре — иначе аккуратно с поясницей.",
   },
   {
@@ -71,6 +74,7 @@ export const EXERCISES_EXTRA: ExerciseSeed[] = [
     equipment: "штанга",
     rom: "lengthened",
     restSec: 120,
+    gifUrl: "/exercises/barbell-bench.png",
     cue: "Лопатки сведены и вдавлены в скамью, локти ~45°. Если плечо тянет спереди — вернись к тренажёру.",
   },
   {
@@ -91,6 +95,7 @@ export const EXERCISES_EXTRA: ExerciseSeed[] = [
     equipment: "гантели",
     rom: "full",
     restSec: 60,
+    gifUrl: "/exercises/hammer-curl.png",
     cue: "Хват нейтральный (молоток), локти у корпуса. Полная амплитуда, вниз медленно.",
   },
   {

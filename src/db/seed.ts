@@ -3,7 +3,7 @@
    Дальше эти строки уедут в Neon через синк. */
 
 import { db } from "~/db/schema";
-import { putRow, putRows } from "~/db/write";
+import { patchRow, putRow, putRows } from "~/db/write";
 import {
   DAYS,
   EXERCISES,
@@ -56,13 +56,23 @@ export async function seedIfNeeded(): Promise<void> {
 /* Справочник = канон в коде. seedIfNeeded заливает его один раз при
    первом запуске; для уже засиденных баз новые упражнения из кода
    добавляем здесь (только отсутствующие — свои правки не трогаем).
-   Гоняется каждый старт после seedIfNeeded. */
+   gifUrl — тоже канон кода (нет экрана, где Григорий мог бы его
+   поменять), поэтому его на существующих строках досверяем и
+   перезаписываем, если код ушёл вперёд. Гоняется каждый старт после
+   seedIfNeeded. */
 export async function syncCatalog(): Promise<void> {
   const all = [...EXERCISES, ...EXERCISES_EXTRA];
-  const present = new Set(
-    (await db.exercises.bulkGet(all.map((e) => e.id))).filter(Boolean).map((e) => e!.id),
-  );
-  const missing = all.filter((e) => !present.has(e.id));
+  const existing = await db.exercises.bulkGet(all.map((e) => e.id));
+  const missing: typeof all = [];
+  for (let i = 0; i < all.length; i++) {
+    const row = existing[i];
+    const seed = all[i]!;
+    if (!row) {
+      missing.push(seed);
+    } else if ((seed.gifUrl ?? null) !== (row.gifUrl ?? null)) {
+      await patchRow("exercises", seed.id, { gifUrl: seed.gifUrl ?? null });
+    }
+  }
   if (missing.length) {
     await putRows(
       "exercises",

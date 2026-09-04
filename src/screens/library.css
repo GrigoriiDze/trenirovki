@@ -69,6 +69,17 @@
   color: var(--text-3);
 }
 
+.lib__credit {
+  margin: var(--s-2) 0 0;
+  font-size: var(--t-xs);
+  color: var(--text-3);
+  text-align: center;
+}
+.lib__credit a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 .lib__list {
   list-style: none;
   margin: 0;

@@ -48,6 +48,7 @@ export const EXERCISES: ExerciseSeed[] = [
     equipment: "блок",
     rom: "iso",
     restSec: 45,
+    gifUrl: "/exercises/pallof-press.png",
     cue: "Боком к блоку, выжимаешь рукоятку от груди и не даёшь корпусу повернуться. Анти-ротация — то, чего нет в тренажёрах.",
   },
   {
@@ -59,6 +60,7 @@ export const EXERCISES: ExerciseSeed[] = [
     rom: "iso",
     load: "bw",
     restSec: 45,
+    gifUrl: "/exercises/bird-dog.png",
     cue: "Противоположные рука и нога, поясница неподвижна. Таз качается — сократи амплитуду ноги.",
   },
 
@@ -81,6 +83,7 @@ export const EXERCISES: ExerciseSeed[] = [
     equipment: "тренажёр",
     rom: "lengthened",
     restSec: 90,
+    gifUrl: "/exercises/lying-leg-curl.png",
     cue: "Подкладка под таз. Опускай до полного выпрямления, 3 секунды вниз. Растянутая фаза — весь смысл упражнения.",
   },
   {
@@ -101,6 +104,7 @@ export const EXERCISES: ExerciseSeed[] = [
     equipment: "штанга",
     rom: "full",
     restSec: 90,
+    gifUrl: "/exercises/hip-thrust.jpg",
     cue: "Подбородок к груди, рёбра вниз, наверху пауза 2 сек. Выпрямление ягодицей, не прогибом поясницы. Чувствуешь поясницу — прогнулся, а не дожал.",
   },
   {
@@ -111,6 +115,7 @@ export const EXERCISES: ExerciseSeed[] = [
     equipment: "тренажёр",
     rom: "full",
     restSec: 60,
+    gifUrl: "/exercises/hip-abduction.jpg",
     cue: "Наклон корпуса вперёд ~30° — так средняя ягодичная в лучшем векторе. Сильная ягодица снимает работу с поясничных разгибателей.",
   },
   {
@@ -121,6 +126,7 @@ export const EXERCISES: ExerciseSeed[] = [
     equipment: "тренажёр",
     rom: "full",
     restSec: 60,
+    gifUrl: "/exercises/hip-adduction.png",
     cue: "Наклон вперёд от таза можно, прогиб в пояснице — нет. Спина нейтральная. Это правка к тому, что показывал Никита.",
   },
 
@@ -133,6 +139,7 @@ export const EXERCISES: ExerciseSeed[] = [
     equipment: "тренажёр",
     rom: "lengthened",
     restSec: 90,
+    gifUrl: "/exercises/leg-press.png",
     cue: "Стопы чуть выше центра платформы, ширина плеч. Опускай ровно до точки, где таз ещё прижат — это твоя нижняя точка, ниже никогда.",
   },
   {
@@ -143,6 +150,7 @@ export const EXERCISES: ExerciseSeed[] = [
     equipment: "тренажёр",
     rom: "lengthened",
     restSec: 90,
+    gifUrl: "/exercises/leg-press-narrow.jpg",
     cue: "Стопы ниже и уже, чем в день B — акцент в квадрицепс. Тот же лимит: таз прижат.",
   },
   {
@@ -153,6 +161,7 @@ export const EXERCISES: ExerciseSeed[] = [
     equipment: "тренажёр",
     rom: "full",
     restSec: 60,
+    gifUrl: "/exercises/leg-extension.png",
     cue: "Отклонись назад в спинку — это удлиняет прямую мышцу бедра. Не выпрямляй колено в замок рывком.",
   },
 
@@ -185,6 +194,7 @@ export const EXERCISES: ExerciseSeed[] = [
     equipment: "блок",
     rom: "full",
     restSec: 90,
+    gifUrl: "/exercises/seated-cable-row-retract.png",
     cue: "Довёл рукоятку — свёл лопатки и держи 1 сек. Локти вдоль корпуса. Лекарство от холки, у Никиты этого нет.",
   },
   {
@@ -195,6 +205,7 @@ export const EXERCISES: ExerciseSeed[] = [
     equipment: "блок",
     rom: "full",
     restSec: 75,
+    gifUrl: "/exercises/single-arm-cable-row.png",
     cue: "Корпус не разворачивается — это работа от Pallof. В конце дай лопатке уехать к позвоночнику.",
   },
   {
@@ -227,6 +238,7 @@ export const EXERCISES: ExerciseSeed[] = [
     equipment: "гантели",
     rom: "lengthened",
     restSec: 90,
+    gifUrl: "/exercises/incline-db-press.png",
     cue: "Лопатки сведены и прижаты к скамье. Плечо щёлкает или тянет спереди — замени на тренажёр с фиксированной траекторией.",
   },
 
@@ -239,6 +251,7 @@ export const EXERCISES: ExerciseSeed[] = [
     equipment: "тренажёр",
     rom: "short",
     restSec: 60,
+    gifUrl: "/exercises/lateral-raise-machine.jpg",
     cue: "Рука выпрямлена, локоть не назад, лёгкая сутулость по технике Никиты. Короткая амплитуда здесь оправдана: в растяжке у дельты плечо рычага почти нулевое.",
   },
   {
@@ -271,6 +284,7 @@ export const EXERCISES: ExerciseSeed[] = [
     equipment: "блок",
     rom: "full",
     restSec: 60,
+    gifUrl: "/exercises/cable-curl.png",
     cue: "Локти зафиксированы у корпуса, полная амплитуда.",
   },
   {
@@ -293,6 +307,7 @@ export const EXERCISES: ExerciseSeed[] = [
     equipment: "тренажёр",
     rom: "lengthened",
     restSec: 45,
+    gifUrl: "/exercises/standing-calf-raise.png",
     cue: "Пауза 1 сек внизу, в растяжке. Икра растёт почти исключительно с растянутой позиции.",
   },
 ];
