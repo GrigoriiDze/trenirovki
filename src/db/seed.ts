@@ -3,7 +3,7 @@
    Дальше эти строки уедут в Neon через синк. */
 
 import { db } from "~/db/schema";
-import { putRows } from "~/db/write";
+import { putRow, putRows } from "~/db/write";
 import {
   DAYS,
   EXERCISES,
@@ -11,6 +11,7 @@ import {
   PROGRAM_VERSION_ID,
 } from "~/data/program-v1";
 import { EXERCISES_EXTRA } from "~/data/exercises-extra";
+import { BODY_BASELINE } from "~/data/body-baseline";
 
 export async function seedIfNeeded(): Promise<void> {
   const existing = await db.programVersions.get(PROGRAM_VERSION_ID);
@@ -68,4 +69,11 @@ export async function syncCatalog(): Promise<void> {
       missing.map((e) => ({ ...e, gifUrl: e.gifUrl ?? null, load: e.load ?? "weight" })),
     );
   }
+}
+
+/* Первый замер тела. get() возвращает и мягко удалённые — если Григорий
+   удалит запись, назад не воскреснет. Гоняется каждый старт. */
+export async function seedBody(): Promise<void> {
+  if (await db.bodyLogs.get(BODY_BASELINE.id)) return;
+  await putRow("bodyLogs", BODY_BASELINE);
 }
