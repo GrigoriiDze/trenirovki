@@ -4,7 +4,7 @@
    Оценка 1ПМ — формула Эпли: 1ПМ ≈ вес · (1 + повторы/30).
    Грубая, но монотонная — годится, чтобы сравнивать подходы во времени. */
 
-import { db, type MuscleGroup, type SetLog } from "~/db/schema";
+import { db, MUSCLE_GROUPS, type MuscleGroup, type SetLog } from "~/db/schema";
 
 export function epley(weight: number, reps: number): number {
   return weight > 0 ? weight * (1 + reps / 30) : 0;
@@ -168,10 +168,21 @@ export async function recentWeightPRs(limit = 12): Promise<PRItem[]> {
 
 const WEEK = 7 * 24 * 3600 * 1000;
 
-/** Ориентир недельного объёма на группу, подходов. Один коридор на всех —
- *  грубо, но честно (консенсус 10–20, BIOMACHINE ниже — см. HISTORY 2026-09-03).
- *  Нижняя граница = «мало», выше верхней = с запасом. */
-export const WEEK_BAND: [number, number] = [8, 16];
+/** Ориентир недельного объёма на группу, подходов. Считаем только ОСНОВНУЮ
+ *  мышцу упражнения (без вторичных, см. схему) — значит и ориентир должен
+ *  быть по факту достижимого «прямого» объёма, не по общему консенсусу
+ *  10–20 (тот учитывает синергистов). Калибровано по собственной
+ *  программе v1: крупные группы получают 6–14 подходов за цикл A→B→C
+ *  «как задумано», мелкие/вспомогательные — 2–6 (context/03, HISTORY). */
+const MAJOR_GROUPS = new Set<MuscleGroup>([
+  "грудь", "широчайшие", "квадрицепс", "бицепс бедра", "ягодицы", "средняя дельта", "кор",
+]);
+export const MAJOR_BAND: [number, number] = [6, 14];
+export const MINOR_BAND: [number, number] = [2, 6];
+
+export function weekBandFor(muscle: MuscleGroup): [number, number] {
+  return MAJOR_GROUPS.has(muscle) ? MAJOR_BAND : MINOR_BAND;
+}
 
 export interface WeekStats {
   sessions: number;
@@ -205,15 +216,28 @@ export async function weekStats(): Promise<WeekStats> {
     sessions: recent.size,
     sets,
     top,
-    under: top.filter((t) => t.sets < WEEK_BAND[0]).map((t) => t.muscle),
+    under: top.filter((t) => t.sets < weekBandFor(t.muscle)[0]).map((t) => t.muscle),
   };
 }
 
-/** Недельный объём (число рабочих подходов) по мышечным группам за последние
- *  N недель. Возвращает массив групп с суммой подходов, по убыванию. */
-export async function muscleVolume(
-  weeks: number,
-): Promise<{ muscle: MuscleGroup; sets: number }[]> {
+export interface MuscleVolume {
+  muscle: MuscleGroup;
+  sets: number;
+  band: [number, number]; // ориентир за весь период (weekBandFor × недели)
+}
+
+export interface VolumeSummary {
+  weeks: number;
+  totalSets: number;
+  sessions: number;
+  byMuscle: MuscleVolume[]; // все 16 групп, включая 0, по убыванию объёма
+  inCorridor: number; // групп с объёмом от нижней границы своего коридора
+}
+
+/** Объём по всем мышечным группам за последние N недель — карта тела и
+ *  список «недогружено» на экране «Прогресс». В отличие от muscleVolume
+ *  (план E) включает группы с нулём подходов — карте нужны все 16. */
+export async function volumeSummary(weeks: number): Promise<VolumeSummary> {
   const since = Date.now() - weeks * WEEK;
   const [logs, sess, exs] = await Promise.all([
     db.setLogs.filter((l) => !l.deleted).toArray(),
@@ -221,15 +245,36 @@ export async function muscleVolume(
     db.exercises.filter((e) => !e.deleted).toArray(),
   ]);
   const muscleOf = new Map(exs.map((e) => [e.id, e.muscle]));
-  const tally = new Map<MuscleGroup, number>();
+  const tally = new Map<MuscleGroup, number>(MUSCLE_GROUPS.map((m) => [m, 0]));
+  const sessionsInWindow = new Set<string>();
+  let totalSets = 0;
   for (const l of logs) {
     const s = sess.get(l.sessionId);
     if (!s || s.startedAt < since) continue;
+    sessionsInWindow.add(s.id);
     const m = muscleOf.get(l.exerciseId);
     if (!m) continue;
+    totalSets++;
     tally.set(m, (tally.get(m) ?? 0) + 1);
   }
-  return [...tally.entries()]
-    .map(([muscle, sets]) => ({ muscle, sets }))
+  const byMuscle = [...tally.entries()]
+    .map(([muscle, sets]) => {
+      const [lo, hi] = weekBandFor(muscle);
+      return { muscle, sets, band: [lo * weeks, hi * weeks] as [number, number] };
+    })
     .sort((a, b) => b.sets - a.sets);
+  return {
+    weeks,
+    totalSets,
+    sessions: sessionsInWindow.size,
+    byMuscle,
+    inCorridor: byMuscle.filter((m) => m.sets >= m.band[0]).length,
+  };
+}
+
+/** Обратная совместимость: только группы с объёмом > 0, по убыванию. */
+export async function muscleVolume(
+  weeks: number,
+): Promise<{ muscle: MuscleGroup; sets: number }[]> {
+  return (await volumeSummary(weeks)).byMuscle.filter((m) => m.sets > 0);
 }

@@ -2,7 +2,9 @@ import { useState } from "preact/hooks";
 import type { Exercise } from "~/db/schema";
 import { useLive } from "~/lib/live";
 import { formatSet } from "~/lib/format-set";
-import { muscleVolume, recentWeightPRs } from "~/progress/calc";
+import { plural } from "~/lib/plural";
+import { MAJOR_BAND, MINOR_BAND, recentWeightPRs, volumeSummary } from "~/progress/calc";
+import { BodyMap } from "~/components/body-map";
 import "./progress.css";
 
 const DATE = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short" });
@@ -18,10 +20,10 @@ export function Progress({
   onOpenExercise: (id: string) => void;
 }) {
   const [weeks, setWeeks] = useState<(typeof RANGES)[number]>(4);
-  const vol = useLive(() => muscleVolume(weeks), [weeks]);
+  const vol = useLive(() => volumeSummary(weeks), [weeks]);
   const prs = useLive(() => recentWeightPRs(15), []);
 
-  const max = vol && vol.length ? vol[0]!.sets : 0;
+  const under = vol?.byMuscle.filter((m) => m.sets < m.band[0]).sort((a, b) => a.sets - b.sets);
 
   return (
     <main class="prog">
@@ -30,41 +32,69 @@ export function Progress({
           ←
         </button>
         <h1>Прогресс</h1>
+        <div class="prog__range" role="group" aria-label="Период">
+          {RANGES.map((r) => (
+            <button key={r} class={weeks === r ? "on" : ""} onClick={() => setWeeks(r)}>
+              {r} нед
+            </button>
+          ))}
+        </div>
       </header>
 
-      <section class="prog__sec">
-        <div class="prog__sectop">
-          <h2>Объём по мышцам</h2>
-          <div class="prog__range" role="group" aria-label="Период">
-            {RANGES.map((r) => (
-              <button key={r} class={weeks === r ? "on" : ""} onClick={() => setWeeks(r)}>
-                {r} нед
-              </button>
-            ))}
+      {!vol ? (
+        <p class="prog__empty">…</p>
+      ) : (
+        <>
+          <div class="stats">
+            <div class="stat">
+              <span class="stat__n num">{vol.totalSets}</span>
+              <span class="stat__l">
+                {plural(vol.totalSets, ["подход", "подхода", "подходов"])} за период
+              </span>
+            </div>
+            <div class="stat">
+              <span class="stat__n num">
+                {vol.inCorridor}
+                <span class="stat__of">/{vol.byMuscle.length}</span>
+              </span>
+              <span class="stat__l">групп в коридоре</span>
+            </div>
+            <div class="stat">
+              <span class="stat__n num">{vol.sessions}</span>
+              <span class="stat__l">{plural(vol.sessions, ["тренировка", "тренировки", "тренировок"])}</span>
+            </div>
           </div>
-        </div>
 
-        {!vol ? (
-          <p class="prog__empty">…</p>
-        ) : vol.length === 0 ? (
-          <p class="prog__empty">За этот период подходов нет.</p>
-        ) : (
-          <ul class="bars">
-            {vol.map((v) => (
-              <li class="bar" key={v.muscle}>
-                <span class="bar__name">{v.muscle}</span>
-                <span class="bar__track">
-                  <span class="bar__fill" style={{ width: `${(v.sets / max) * 100}%` }} />
-                </span>
-                <span class="bar__val num">{v.sets}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-        <p class="prog__note">
-          Подходов в неделю на группу: ориентир 10–20. Считаются все рабочие подходы.
-        </p>
-      </section>
+          <section class="prog__sec">
+            <h2>Что нагружено за {weeks} нед.</h2>
+            <BodyMap data={vol.byMuscle} />
+          </section>
+
+          {under && under.length > 0 ? (
+            <section class="prog__sec">
+              <h2>Меньше всего нагружено</h2>
+              <ul class="bars">
+                {under.map((v) => (
+                  <li class="bar" key={v.muscle}>
+                    <span class="bar__name">{v.muscle}</span>
+                    <span class="bar__track">
+                      <span
+                        class="bar__fill"
+                        style={{ width: `${Math.min(100, (v.sets / v.band[1]) * 100)}%` }}
+                      />
+                    </span>
+                    <span class="bar__val num">{v.sets}</span>
+                  </li>
+                ))}
+              </ul>
+              <p class="prog__note">
+                Ориентир в неделю: крупные группы {MAJOR_BAND[0]}–{MAJOR_BAND[1]} подходов,
+                мелкие/вспомогательные {MINOR_BAND[0]}–{MINOR_BAND[1]}.
+              </p>
+            </section>
+          ) : null}
+        </>
+      )}
 
       <section class="prog__sec">
         <h2>Личные рекорды</h2>

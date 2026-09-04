@@ -1,0 +1,80 @@
+.bmap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.bmap__row {
+  display: flex;
+  justify-content: center;
+  gap: var(--s-5);
+}
+.bmap__col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  flex: 1;
+  max-width: 160px;
+}
+.bmap__fig {
+  width: 100%;
+  height: auto;
+}
+.bmap__label {
+  font-size: var(--t-xs);
+  color: var(--text-3);
+}
+.bmap__part {
+  cursor: pointer;
+  transition: opacity 0.12s;
+}
+.bmap__part rect,
+.bmap__part ellipse {
+  stroke: var(--bg);
+  stroke-width: 1.5;
+  transition: filter 0.12s;
+}
+.bmap__part--on rect,
+.bmap__part--on ellipse {
+  stroke: var(--text);
+  stroke-width: 2;
+}
+.bmap__part:active {
+  opacity: 0.8;
+}
+.bmap__neutral rect,
+.bmap__neutral ellipse {
+  stroke: var(--bg);
+  stroke-width: 1.5;
+}
+
+.bmap__caption {
+  margin: 0;
+  min-height: 1.4em;
+  text-align: center;
+  font-size: var(--t-sm);
+  color: var(--text-2);
+}
+.bmap__caption b {
+  color: var(--text);
+}
+
+.bmap__legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1);
+  font-size: var(--t-xs);
+  color: var(--text-3);
+  flex-wrap: wrap;
+}
+.bmap__sw {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-left: var(--s-2);
+}
+.bmap__sw:first-child {
+  margin-left: 0;
+}

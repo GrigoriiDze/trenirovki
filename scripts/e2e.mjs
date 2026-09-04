@@ -149,6 +149,13 @@ await page.waitForSelector(".prog");
 const bars = await page.locator(".bar").count();
 step(12, `прогресс: ${bars} групп мышц в объёме`);
 await page.screenshot({ path: `${OUT}/e2e-progress${SUF}.png` });
+
+// карта тела — тап по зоне даёт подпись (кликаем по самой фигуре, не по
+// обёртке .bmap__part: у неё bbox на обе стороны сразу, центр может
+// попасть в промежуток между L/R и зацепить соседнюю зону)
+await page.locator(".bmap__part rect, .bmap__part ellipse").first().click();
+await page.waitForSelector(".bmap__caption b");
+step("12.5", `карта тела: тап по зоне → "${await page.locator(".bmap__caption").innerText()}"`);
 await page.click(".prog__back");
 await page.waitForSelector(".home");
 
