@@ -168,10 +168,16 @@ export async function recentWeightPRs(limit = 12): Promise<PRItem[]> {
 
 const WEEK = 7 * 24 * 3600 * 1000;
 
+/** Ориентир недельного объёма на группу, подходов. Один коридор на всех —
+ *  грубо, но честно (консенсус 10–20, BIOMACHINE ниже — см. HISTORY 2026-09-03).
+ *  Нижняя граница = «мало», выше верхней = с запасом. */
+export const WEEK_BAND: [number, number] = [8, 16];
+
 export interface WeekStats {
   sessions: number;
   sets: number;
   top: { muscle: MuscleGroup; sets: number }[]; // топ групп по объёму
+  under: MuscleGroup[]; // тренировал, но меньше нижней границы коридора
 }
 
 /** Сводка за последние 7 дней — для дашборда на главном. */
@@ -192,12 +198,14 @@ export async function weekStats(): Promise<WeekStats> {
     const m = muscleOf.get(l.exerciseId);
     if (m) tally.set(m, (tally.get(m) ?? 0) + 1);
   }
+  const top = [...tally.entries()]
+    .map(([muscle, s]) => ({ muscle, sets: s }))
+    .sort((a, b) => b.sets - a.sets);
   return {
     sessions: recent.size,
     sets,
-    top: [...tally.entries()]
-      .map(([muscle, s]) => ({ muscle, sets: s }))
-      .sort((a, b) => b.sets - a.sets),
+    top,
+    under: top.filter((t) => t.sets < WEEK_BAND[0]).map((t) => t.muscle),
   };
 }
 

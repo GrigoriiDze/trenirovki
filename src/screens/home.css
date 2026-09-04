@@ -123,12 +123,16 @@
   background: var(--accent);
   min-width: 2px;
 }
+.week__fill--low {
+  background: var(--feel-1);
+}
 .week__n {
   font-size: 11px;
   color: var(--text-3);
   text-align: right;
 }
-.week__none {
+.week__none,
+.week__legend {
   margin: 0;
   font-size: var(--t-xs);
   color: var(--text-3);

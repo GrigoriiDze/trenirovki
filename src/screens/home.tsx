@@ -3,7 +3,7 @@ import type { SyncState } from "~/sync/engine";
 import { useLive } from "~/lib/live";
 import { plural } from "~/lib/plural";
 import { formatSet } from "~/lib/format-set";
-import { recentWeightPRs, weekStats } from "~/progress/calc";
+import { recentWeightPRs, weekStats, WEEK_BAND } from "~/progress/calc";
 import { bodyHistory } from "~/body/calc";
 import "./home.css";
 
@@ -58,7 +58,6 @@ export function Home({
   const daysSinceBody = lastBody
     ? Math.floor((Date.now() - lastBody.date) / 86400000)
     : null;
-  const maxTop = week && week.top.length ? week.top[0]!.sets : 0;
 
   return (
     <main class="home">
@@ -93,17 +92,25 @@ export function Home({
           </span>
         </div>
         {week && week.top.length ? (
-          <ul class="week__bars">
-            {week.top.slice(0, 5).map((t) => (
-              <li class="week__bar" key={t.muscle}>
-                <span class="week__m">{t.muscle}</span>
-                <span class="week__track">
-                  <span class="week__fill" style={{ width: `${(t.sets / maxTop) * 100}%` }} />
-                </span>
-                <span class="week__n num">{t.sets}</span>
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul class="week__bars">
+              {week.top.slice(0, 5).map((t) => (
+                <li class="week__bar" key={t.muscle}>
+                  <span class="week__m">{t.muscle}</span>
+                  <span class="week__track">
+                    <span
+                      class={`week__fill ${t.sets < WEEK_BAND[0] ? "week__fill--low" : ""}`}
+                      style={{ width: `${Math.min(100, (t.sets / WEEK_BAND[1]) * 100)}%` }}
+                    />
+                  </span>
+                  <span class="week__n num">{t.sets}</span>
+                </li>
+              ))}
+            </ul>
+            <p class="week__legend">
+              Ориентир — {WEEK_BAND[0]}–{WEEK_BAND[1]} подходов на группу в неделю
+            </p>
+          </>
         ) : week ? (
           <p class="week__none">На этой неделе тренировок не было.</p>
         ) : null}
