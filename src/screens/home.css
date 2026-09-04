@@ -65,6 +65,109 @@
   color: var(--accent);
 }
 
+/* ── блок «Неделя» ── */
+.week {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  text-align: left;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.week:active {
+  background: var(--surface-2);
+}
+.week__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+.week__count {
+  font-size: var(--t-xs);
+  color: var(--text-2);
+}
+.week__bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+.week__bar {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr 1.25rem;
+  align-items: center;
+  gap: var(--s-2);
+}
+.week__m {
+  font-size: 11px;
+  color: var(--text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.week__track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.week__fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+  min-width: 2px;
+}
+.week__n {
+  font-size: 11px;
+  color: var(--text-3);
+  text-align: right;
+}
+.week__none {
+  margin: 0;
+  font-size: var(--t-xs);
+  color: var(--text-3);
+}
+
+/* ── полоска «последний рекорд» ── */
+.strip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.strip:active {
+  background: var(--surface-2);
+}
+.strip__body {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+.strip__name {
+  font-size: var(--t-sm);
+  font-weight: 550;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.strip__val {
+  font-size: var(--t-xs);
+  color: var(--text-3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .tiles {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

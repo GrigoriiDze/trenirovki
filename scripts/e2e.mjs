@@ -33,7 +33,8 @@ await page.goto(BASE, { waitUntil: "networkidle" });
 await page.fill(".unlock__input", TOKEN);
 await page.click(".unlock .btn--primary");
 await page.waitForSelector(".home");
-step(1, "вход + главный");
+await page.waitForSelector(".week"); // дашборд-блок «Неделя»
+step(1, "вход + главный (с блоком «Неделя»)");
 
 await page.click(".card--today");
 await page.waitForSelector(".today");

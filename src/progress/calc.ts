@@ -168,6 +168,39 @@ export async function recentWeightPRs(limit = 12): Promise<PRItem[]> {
 
 const WEEK = 7 * 24 * 3600 * 1000;
 
+export interface WeekStats {
+  sessions: number;
+  sets: number;
+  top: { muscle: MuscleGroup; sets: number }[]; // топ групп по объёму
+}
+
+/** Сводка за последние 7 дней — для дашборда на главном. */
+export async function weekStats(): Promise<WeekStats> {
+  const since = Date.now() - WEEK;
+  const [logs, sessAll, exs] = await Promise.all([
+    db.setLogs.filter((l) => !l.deleted).toArray(),
+    db.sessions.filter((s) => !s.deleted && s.finishedAt !== null).toArray(),
+    db.exercises.filter((e) => !e.deleted).toArray(),
+  ]);
+  const recent = new Map(sessAll.filter((s) => s.startedAt >= since).map((s) => [s.id, s]));
+  const muscleOf = new Map(exs.map((e) => [e.id, e.muscle]));
+  const tally = new Map<MuscleGroup, number>();
+  let sets = 0;
+  for (const l of logs) {
+    if (!recent.has(l.sessionId)) continue;
+    sets++;
+    const m = muscleOf.get(l.exerciseId);
+    if (m) tally.set(m, (tally.get(m) ?? 0) + 1);
+  }
+  return {
+    sessions: recent.size,
+    sets,
+    top: [...tally.entries()]
+      .map(([muscle, s]) => ({ muscle, sets: s }))
+      .sort((a, b) => b.sets - a.sets),
+  };
+}
+
 /** Недельный объём (число рабочих подходов) по мышечным группам за последние
  *  N недель. Возвращает массив групп с суммой подходов, по убыванию. */
 export async function muscleVolume(

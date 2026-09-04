@@ -1,11 +1,17 @@
-import type { DayCode } from "~/db/schema";
+import type { DayCode, Exercise } from "~/db/schema";
 import type { SyncState } from "~/sync/engine";
+import { useLive } from "~/lib/live";
+import { plural } from "~/lib/plural";
+import { formatSet } from "~/lib/format-set";
+import { recentWeightPRs, weekStats } from "~/progress/calc";
+import { bodyHistory } from "~/body/calc";
 import "./home.css";
 
 interface Props {
   day: DayCode;
   dayTitle: string;
   exerciseCount: number;
+  exerciseById: Map<string, Exercise>;
   sync: SyncState;
   hasOpenSession: boolean;
   onOpenToday: () => void;
@@ -20,6 +26,7 @@ const TODAY_FMT = new Intl.DateTimeFormat("ru-RU", {
   day: "numeric",
   month: "long",
 });
+const PR_FMT = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short" });
 
 function syncLabel(s: SyncState): { text: string; tone: "ok" | "wait" | "bad" } {
   if (s.status === "bad-token") return { text: "код отклонён", tone: "bad" };
@@ -33,6 +40,7 @@ export function Home({
   day,
   dayTitle,
   exerciseCount,
+  exerciseById,
   sync,
   hasOpenSession,
   onOpenToday,
@@ -42,6 +50,16 @@ export function Home({
   onOpenBody,
 }: Props) {
   const sl = syncLabel(sync);
+  const week = useLive(() => weekStats(), []);
+  const lastPR = useLive(async () => (await recentWeightPRs(1))[0] ?? null, []);
+  const body = useLive(() => bodyHistory(), []);
+
+  const lastBody = body && body.length ? body[body.length - 1]! : null;
+  const daysSinceBody = lastBody
+    ? Math.floor((Date.now() - lastBody.date) / 86400000)
+    : null;
+  const maxTop = week && week.top.length ? week.top[0]!.sets : 0;
+
   return (
     <main class="home">
       <header class="home__head">
@@ -65,6 +83,46 @@ export function Home({
         </button>
       )}
 
+      <button class="week" onClick={onOpenProgress}>
+        <div class="week__top">
+          <span class="label">Неделя</span>
+          <span class="week__count num">
+            {week
+              ? `${week.sessions} ${plural(week.sessions, ["тренировка", "тренировки", "тренировок"])} · ${week.sets} ${plural(week.sets, ["подход", "подхода", "подходов"])}`
+              : "…"}
+          </span>
+        </div>
+        {week && week.top.length ? (
+          <ul class="week__bars">
+            {week.top.slice(0, 5).map((t) => (
+              <li class="week__bar" key={t.muscle}>
+                <span class="week__m">{t.muscle}</span>
+                <span class="week__track">
+                  <span class="week__fill" style={{ width: `${(t.sets / maxTop) * 100}%` }} />
+                </span>
+                <span class="week__n num">{t.sets}</span>
+              </li>
+            ))}
+          </ul>
+        ) : week ? (
+          <p class="week__none">На этой неделе тренировок не было.</p>
+        ) : null}
+      </button>
+
+      {lastPR ? (
+        <button class="strip" onClick={onOpenProgress}>
+          <span class="label">Последний рекорд</span>
+          <span class="strip__body">
+            <span class="strip__name">{exerciseById.get(lastPR.exerciseId)?.nameRu ?? lastPR.exerciseId}</span>
+            <span class="strip__val num">
+              {formatSet(exerciseById.get(lastPR.exerciseId)?.load ?? "weight", lastPR.weight, lastPR.reps)}
+              {" · "}
+              {PR_FMT.format(new Date(lastPR.date))}
+            </span>
+          </span>
+        </button>
+      ) : null}
+
       <nav class="tiles">
         <button class="tile tile--on" onClick={onOpenDiary}>
           <span class="tile__name">Дневник</span>
@@ -74,6 +132,9 @@ export function Home({
         </button>
         <button class="tile tile--on" onClick={onOpenBody}>
           <span class="tile__name">Тело</span>
+          {daysSinceBody != null && daysSinceBody >= 28 ? (
+            <span class="tile__soon">{daysSinceBody} дн</span>
+          ) : null}
         </button>
       </nav>
 

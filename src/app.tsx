@@ -169,6 +169,7 @@ function Shell() {
         day={suggested}
         dayTitle={DAY_TITLES[suggested]}
         exerciseCount={todaySlots.length}
+        exerciseById={byId}
         sync={sync}
         hasOpenSession={Boolean(open)}
         onOpenToday={() => setRoute({ name: "today" })}
