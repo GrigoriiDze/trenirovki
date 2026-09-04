@@ -124,13 +124,30 @@ await page.click(".sum .btn--primary");
 await page.waitForSelector(".home");
 
 // дневник
-await page.click(".tile--on");
+await page.click(".tile--on:has-text('Дневник')");
 await page.waitForSelector(".diary");
 const diaryRows = await page.locator(".drow").count();
 step(10, `дневник: ${diaryRows} тренировк(и)`);
-await page.locator(".drow__head").first().click();
+await page.locator(".drow__head").last().click(); // первая тренировка — в ней есть подход
 await page.waitForSelector(".drow__body");
 await page.screenshot({ path: `${OUT}/e2e-diary${SUF}.png` });
+
+// экран упражнения из дневника
+await page.locator(".drow__exname").first().click();
+await page.waitForSelector(".exs");
+step(11, `экран упражнения: "${await page.locator(".exs__head h1").innerText()}"`);
+await page.screenshot({ path: `${OUT}/e2e-exercise${SUF}.png` });
+await page.click(".exs__back");
+await page.waitForSelector(".diary");
+
+// прогресс
+await page.click(".diary__back");
+await page.waitForSelector(".home");
+await page.click(".tile--on:has-text('Прогресс')");
+await page.waitForSelector(".prog");
+const bars = await page.locator(".bar").count();
+step(12, `прогресс: ${bars} групп мышц в объёме`);
+await page.screenshot({ path: `${OUT}/e2e-progress${SUF}.png` });
 
 await browser.close();
 console.log(errs.length ? "ОШИБКИ:\n" + errs.join("\n") : "✓ ошибок консоли нет");

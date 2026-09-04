@@ -70,6 +70,19 @@
   font-size: var(--t-lg);
   text-wrap: balance;
 }
+.sess__name {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  text-align: left;
+  width: 100%;
+}
+.sess__namego {
+  font-size: var(--t-xs);
+  color: var(--text-3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 .sess__target {
   margin: 0;
   font-size: var(--t-sm);
@@ -146,6 +159,17 @@
   margin-left: auto;
   font-size: var(--t-xs);
   color: var(--text-3);
+}
+.setrow__pr {
+  margin-left: auto;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--feel-0);
+}
+.setrow__pr + .setrow__was {
+  margin-left: var(--s-2);
 }
 
 /* ── input dock ── */

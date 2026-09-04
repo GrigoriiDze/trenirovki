@@ -14,6 +14,8 @@ import { Today } from "~/screens/today";
 import { Session } from "~/screens/session";
 import { Summary } from "~/screens/summary";
 import { Diary } from "~/screens/diary";
+import { ExerciseScreen } from "~/screens/exercise";
+import { Progress } from "~/screens/progress";
 import { Unlock } from "~/screens/unlock";
 
 type Route =
@@ -21,7 +23,9 @@ type Route =
   | { name: "today" }
   | { name: "session" }
   | { name: "summary"; sessionId: string }
-  | { name: "diary" };
+  | { name: "diary" }
+  | { name: "progress" }
+  | { name: "exercise"; exerciseId: string; back: Route };
 
 /** Обёртка экрана: безопасные зоны (вырез/статус-бар) + анимация появления.
  *  key меняется при смене экрана → Preact перемонтирует → проигрывается вход. */
@@ -86,7 +90,28 @@ function Shell() {
   let screen: ComponentChildren;
   let key: string = route.name;
 
-  if (route.name === "session" && open && sessItems) {
+  const openExercise = (exerciseId: string) =>
+    setRoute({ name: "exercise", exerciseId, back: route });
+
+  if (route.name === "exercise") {
+    key = `exercise-${route.exerciseId}`;
+    const back = route.back;
+    screen = (
+      <ExerciseScreen
+        exerciseId={route.exerciseId}
+        exercise={byId.get(route.exerciseId)}
+        onBack={() => setRoute(back)}
+      />
+    );
+  } else if (route.name === "progress") {
+    screen = (
+      <Progress
+        exerciseById={byId}
+        onBack={() => setRoute({ name: "home" })}
+        onOpenExercise={openExercise}
+      />
+    );
+  } else if (route.name === "session" && open && sessItems) {
     screen = (
       <Session
         session={open}
@@ -95,6 +120,7 @@ function Shell() {
         allExercises={exercises}
         onExit={() => setRoute({ name: "home" })}
         onFinish={() => setRoute({ name: "summary", sessionId: open.id })}
+        onOpenExercise={openExercise}
       />
     );
   } else if (route.name === "summary") {
@@ -104,10 +130,17 @@ function Shell() {
         sessionId={route.sessionId}
         byId={byId}
         onHome={() => setRoute({ name: "home" })}
+        onOpenExercise={openExercise}
       />
     );
   } else if (route.name === "diary") {
-    screen = <Diary exerciseById={byId} onBack={() => setRoute({ name: "home" })} />;
+    screen = (
+      <Diary
+        exerciseById={byId}
+        onBack={() => setRoute({ name: "home" })}
+        onOpenExercise={openExercise}
+      />
+    );
   } else if (route.name === "today") {
     screen = (
       <Today
@@ -136,6 +169,7 @@ function Shell() {
         onOpenToday={() => setRoute({ name: "today" })}
         onResume={() => setRoute({ name: "session" })}
         onOpenDiary={() => setRoute({ name: "diary" })}
+        onOpenProgress={() => setRoute({ name: "progress" })}
       />
     );
   }
@@ -154,12 +188,16 @@ function SummaryLoader({
   sessionId,
   byId,
   onHome,
+  onOpenExercise,
 }: {
   sessionId: string;
   byId: Map<string, Exercise>;
   onHome: () => void;
+  onOpenExercise: (id: string) => void;
 }) {
   const s = useLive(() => db.sessions.get(sessionId), [sessionId]);
   if (!s) return <div class="boot">…</div>;
-  return <Summary session={s} exerciseById={byId} onHome={onHome} />;
+  return (
+    <Summary session={s} exerciseById={byId} onHome={onHome} onOpenExercise={onOpenExercise} />
+  );
 }

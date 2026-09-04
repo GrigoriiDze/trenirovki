@@ -13,9 +13,11 @@ const DATE_FMT = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long
 export function Diary({
   exerciseById,
   onBack,
+  onOpenExercise,
 }: {
   exerciseById: Map<string, Exercise>;
   onBack: () => void;
+  onOpenExercise: (id: string) => void;
 }) {
   const sessions = useLive(
     () =>
@@ -93,7 +95,9 @@ export function Diary({
                     <ul class="drow__ex">
                       {[...byEx].map(([exId, exls]) => (
                         <li key={exId}>
-                          <span class="drow__exname">{exerciseById.get(exId)?.nameRu ?? exId}</span>
+                          <button class="drow__exname" onClick={() => onOpenExercise(exId)}>
+                            {exerciseById.get(exId)?.nameRu ?? exId}
+                          </button>
                           <span class="drow__exsets num">
                             {exls
                               .sort((a, b) => a.setNumber - b.setNumber)

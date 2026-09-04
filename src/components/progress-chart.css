@@ -1,0 +1,52 @@
+.chart {
+  margin: 0;
+}
+.chart__svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+.chart__axis {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.chart__line {
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.chart__dot {
+  fill: var(--accent);
+}
+.chart__pt--pr .chart__dot {
+  fill: var(--feel-0);
+  stroke: var(--bg);
+  stroke-width: 1.5;
+}
+.chart__pt--sel .chart__dot {
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+.chart__last,
+.chart__tip {
+  fill: var(--text-2);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+.chart__tip {
+  fill: var(--text);
+}
+.chart__cap {
+  margin-top: var(--s-1);
+  font-size: var(--t-xs);
+  color: var(--text-3);
+  text-align: center;
+}
+.chart__empty {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--text-3);
+}

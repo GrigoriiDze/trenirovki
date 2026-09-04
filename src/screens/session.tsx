@@ -12,6 +12,7 @@ import {
   removeExercise,
 } from "~/session/store";
 import { lastSetsFor } from "~/session/history";
+import { prsInSession } from "~/progress/calc";
 import { haptic } from "~/lib/haptic";
 import { Stepper } from "~/components/stepper";
 import { RestTimer } from "~/components/rest-timer";
@@ -24,13 +25,23 @@ interface Props {
   allExercises: Exercise[];
   onExit: () => void;
   onFinish: () => void;
+  onOpenExercise: (id: string) => void;
 }
 
-export function Session({ session, items, exerciseById, allExercises, onExit, onFinish }: Props) {
+export function Session({
+  session,
+  items,
+  exerciseById,
+  allExercises,
+  onExit,
+  onFinish,
+  onOpenExercise,
+}: Props) {
   const logs = useLive(
     () => db.setLogs.where("sessionId").equals(session.id).filter((l) => !l.deleted).sortBy("setNumber"),
     [session.id],
   );
+  const prs = useLive(() => prsInSession(session.id), [session.id]);
 
   const [exIdx, setExIdx] = useState(0);
   const [weight, setWeight] = useState(20);
@@ -194,7 +205,10 @@ export function Session({ session, items, exerciseById, allExercises, onExit, on
       {item && ex ? (
         <>
           <div class="sess__ex">
-            <h1>{ex.nameRu}</h1>
+            <button class="sess__name" onClick={() => onOpenExercise(ex.id)}>
+              <h1>{ex.nameRu}</h1>
+              <span class="sess__namego" aria-hidden="true">история →</span>
+            </button>
             <p class="sess__target num">
               {targetStr}
               {item.perSide ? " · каждая сторона" : ""}
@@ -232,6 +246,7 @@ export function Session({ session, items, exerciseById, allExercises, onExit, on
                   ) : (
                     <span class="setrow__val setrow__val--pending">—</span>
                   )}
+                  {log && prs?.has(log.id) ? <span class="setrow__pr">рекорд</span> : null}
                   {wasHint && !log ? <span class="setrow__was num">было {wasHint}</span> : null}
                 </li>
               );

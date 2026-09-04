@@ -2,22 +2,30 @@ import { db, type Exercise, type Session as Sess } from "~/db/schema";
 import { useLive } from "~/lib/live";
 import { plural } from "~/lib/plural";
 import { formatSet } from "~/lib/format-set";
+import { prsInSession } from "~/progress/calc";
 import "./summary.css";
 
 export function Summary({
   session,
   exerciseById,
   onHome,
+  onOpenExercise,
 }: {
   session: Sess;
   exerciseById: Map<string, Exercise>;
   onHome: () => void;
+  onOpenExercise: (id: string) => void;
 }) {
   const logs = useLive(
     () => db.setLogs.where("sessionId").equals(session.id).filter((l) => !l.deleted).sortBy("loggedAt"),
     [session.id],
   );
+  const prs = useLive(() => prsInSession(session.id), [session.id]);
   if (!logs) return <div class="boot">…</div>;
+
+  const prExercises = new Set(
+    [...(prs?.keys() ?? [])].map((id) => logs.find((l) => l.id === id)?.exerciseId).filter(Boolean),
+  );
 
   const byEx = new Map<string, typeof logs>();
   for (const l of logs) {
@@ -49,7 +57,10 @@ export function Summary({
           const ex = exerciseById.get(exId);
           return (
             <li class="sum__ex" key={exId}>
-              <span class="sum__name">{ex?.nameRu ?? exId}</span>
+              <button class="sum__name" onClick={() => onOpenExercise(exId)}>
+                {ex?.nameRu ?? exId}
+                {prExercises.has(exId) ? <span class="sum__pr">рекорд</span> : null}
+              </button>
               <span class="sum__sets num">
                 {ls.map((l) => formatSet(ex?.load ?? "weight", l.weight, l.reps)).join("   ")}
               </span>

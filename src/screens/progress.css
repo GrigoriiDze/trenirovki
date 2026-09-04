@@ -1,0 +1,138 @@
+.prog {
+  max-width: 520px;
+  margin: 0 auto;
+  width: 100%;
+  padding: var(--s-3) var(--s-4) calc(var(--s-5) + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+.prog__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.prog__back {
+  min-height: var(--tap);
+  min-width: var(--tap);
+  font-size: var(--t-lg);
+  color: var(--text-2);
+  margin-left: calc(var(--s-2) * -1);
+}
+.prog__head h1 {
+  font-size: var(--t-lg);
+}
+.prog__sec {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.prog__sec h2 {
+  font-size: var(--t-md);
+  font-weight: 600;
+}
+.prog__sectop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+.prog__range {
+  display: flex;
+  gap: var(--s-1);
+}
+.prog__range button {
+  min-height: 36px;
+  padding: 0 var(--s-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  font-size: var(--t-xs);
+  color: var(--text-3);
+}
+.prog__range button.on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.prog__empty,
+.prog__note {
+  margin: 0;
+  font-size: var(--t-xs);
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
+/* ── бары объёма ── */
+.bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.bar {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr 1.75rem;
+  align-items: center;
+  gap: var(--s-2);
+}
+.bar__name {
+  font-size: var(--t-xs);
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bar__track {
+  height: 10px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.bar__fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+  min-width: 3px;
+}
+.bar__val {
+  font-size: var(--t-xs);
+  color: var(--text-3);
+  text-align: right;
+}
+
+/* ── рекорды ── */
+.prs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.pr__btn {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: var(--s-3);
+  width: 100%;
+  text-align: left;
+  min-height: var(--tap);
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--line);
+}
+.pr__name {
+  font-size: var(--t-sm);
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pr__val {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--text-2);
+}
+.pr__date {
+  font-size: var(--t-xs);
+  color: var(--text-3);
+}

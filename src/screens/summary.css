@@ -33,8 +33,20 @@
   border-bottom: 1px solid var(--line);
 }
 .sum__name {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  width: 100%;
+  text-align: left;
   font-size: var(--t-md);
   font-weight: 550;
+}
+.sum__pr {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--feel-0);
 }
 .sum__sets {
   font-size: var(--t-sm);
