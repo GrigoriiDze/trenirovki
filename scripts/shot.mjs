@@ -69,7 +69,11 @@ async function main() {
         [TOKEN, needsToken],
       );
       await page.goto(`${base}${path}`, { waitUntil: "networkidle" });
-      await page.waitForTimeout(500);
+      // дождаться настоящего экрана, а не заставки «загрузка…»
+      await page
+        .waitForFunction(() => !document.querySelector(".boot"), null, { timeout: 15000 })
+        .catch(() => {});
+      await page.waitForTimeout(400);
       const file = `${OUT}/${name}.${scheme}.png`;
       await page.screenshot({ path: file, fullPage: true });
       console.log(`  ${file.replace(OUT + "/", "shots/")}`);
