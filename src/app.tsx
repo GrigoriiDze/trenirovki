@@ -17,6 +17,7 @@ import { Diary } from "~/screens/diary";
 import { ExerciseScreen } from "~/screens/exercise";
 import { Progress } from "~/screens/progress";
 import { Body } from "~/screens/body";
+import { Library } from "~/screens/library";
 import { Unlock } from "~/screens/unlock";
 
 type Route =
@@ -27,6 +28,7 @@ type Route =
   | { name: "diary" }
   | { name: "progress" }
   | { name: "body" }
+  | { name: "library" }
   | { name: "exercise"; exerciseId: string; back: Route };
 
 /** Обёртка экрана: безопасные зоны (вырез/статус-бар) + анимация появления.
@@ -116,6 +118,14 @@ function Shell() {
     );
   } else if (route.name === "body") {
     screen = <Body onBack={() => setRoute({ name: "home" })} />;
+  } else if (route.name === "library") {
+    screen = (
+      <Library
+        exercises={exercises}
+        onBack={() => setRoute({ name: "home" })}
+        onOpenExercise={openExercise}
+      />
+    );
   } else if (route.name === "session" && open && sessItems) {
     screen = (
       <Session
@@ -177,6 +187,7 @@ function Shell() {
         onOpenDiary={() => setRoute({ name: "diary" })}
         onOpenProgress={() => setRoute({ name: "progress" })}
         onOpenBody={() => setRoute({ name: "body" })}
+        onOpenLibrary={() => setRoute({ name: "library" })}
       />
     );
   }

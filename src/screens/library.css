@@ -1,0 +1,114 @@
+.lib {
+  max-width: 520px;
+  margin: 0 auto;
+  width: 100%;
+  padding: var(--s-3) var(--s-4) calc(var(--s-5) + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.lib__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.lib__back {
+  min-height: var(--tap);
+  min-width: var(--tap);
+  font-size: var(--t-lg);
+  color: var(--text-2);
+  margin-left: calc(var(--s-2) * -1);
+}
+.lib__head h1 {
+  font-size: var(--t-lg);
+  flex: 1;
+}
+.lib__count {
+  font-size: var(--t-sm);
+  color: var(--text-3);
+}
+
+.lib__search {
+  min-height: var(--tap);
+  padding: 0 var(--s-3);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--t-md);
+}
+.lib__search::placeholder {
+  color: var(--text-3);
+}
+.lib__search:focus-visible {
+  border-color: var(--accent);
+}
+
+.lib__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+}
+.lib__chips button {
+  min-height: 32px;
+  padding: 0 var(--s-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  font-size: var(--t-xs);
+  color: var(--text-3);
+}
+.lib__chips button.on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.lib__empty {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--text-3);
+}
+
+.lib__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lib__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  text-align: left;
+  min-height: 56px;
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--line);
+}
+.lib__thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.lib__thumb--empty {
+  display: block;
+}
+.lib__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.lib__name {
+  font-size: var(--t-sm);
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lib__muscle {
+  font-size: var(--t-xs);
+  color: var(--text-3);
+}

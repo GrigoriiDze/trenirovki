@@ -146,6 +146,7 @@ await page.click(".diary__back");
 await page.waitForSelector(".home");
 await page.click(".tile--on:has-text('Прогресс')");
 await page.waitForSelector(".prog");
+await page.waitForSelector(".stats"); // дождаться, пока volumeSummary() отработает
 const bars = await page.locator(".bar").count();
 step(12, `прогресс: ${bars} групп мышц в объёме`);
 await page.screenshot({ path: `${OUT}/e2e-progress${SUF}.png` });
@@ -159,6 +160,23 @@ step("12.5", `карта тела: тап по зоне → "${await page.locato
 await page.click(".prog__back");
 await page.waitForSelector(".home");
 
+// библиотека: поиск + фильтр по мышце
+await page.click(".tile--on:has-text('Библиотека')");
+await page.waitForSelector(".lib");
+const allCount = await page.locator(".lib__list li").count();
+await page.fill(".lib__search", "жим");
+await page.waitForTimeout(150);
+const filtered = await page.locator(".lib__list li").count();
+step(13, `библиотека: ${allCount} всего, "жим" → ${filtered}`);
+await page.fill(".lib__search", "");
+await page.locator(".lib__row").first().click();
+await page.waitForSelector(".exs");
+await page.screenshot({ path: `${OUT}/e2e-library${SUF}.png` });
+await page.click(".exs__back");
+await page.waitForSelector(".lib");
+await page.click(".lib__back");
+await page.waitForSelector(".home");
+
 // тело: записать замер
 await page.click(".tile--on:has-text('Тело')");
 await page.waitForSelector(".body");
@@ -169,7 +187,7 @@ await page.screenshot({ path: `${OUT}/e2e-body-form${SUF}.png` });
 await page.click(".body__save");
 await page.waitForSelector(".mlist");
 const mrows = await page.locator(".mrow").count();
-step(13, `тело: замер сохранён, ${mrows} полей`);
+step(14, `тело: замер сохранён, ${mrows} полей`);
 await page.screenshot({ path: `${OUT}/e2e-body${SUF}.png` });
 
 await browser.close();

@@ -23,6 +23,14 @@
   font-size: var(--t-lg);
   text-wrap: balance;
 }
+.exs__gif {
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  display: block;
+}
 .exs__cue {
   margin: 0;
   font-size: var(--t-sm);

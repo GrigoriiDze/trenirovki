@@ -78,6 +78,10 @@ export function ExerciseScreen({
         <h1>{exercise?.nameRu ?? exerciseId}</h1>
       </header>
 
+      {exercise?.gifUrl ? (
+        <img class="exs__gif" src={exercise.gifUrl} alt={`Техника: ${exercise.nameRu}`} loading="lazy" />
+      ) : null}
+
       {exercise?.cue ? <p class="exs__cue">{exercise.cue}</p> : null}
 
       {best?.byWeight ? (
