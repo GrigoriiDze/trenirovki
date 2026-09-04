@@ -94,6 +94,16 @@ export const EXERCISES_EXTRA: ExerciseSeed[] = [
     cue: "Хват нейтральный (молоток), локти у корпуса. Полная амплитуда, вниз медленно.",
   },
   {
+    id: "db-curl-seated",
+    nameRu: "Сгибания гантелей сидя с доворотом",
+    nameEn: "seated dumbbell curl with supination",
+    muscle: "бицепс",
+    equipment: "гантели",
+    rom: "full",
+    restSec: 60,
+    cue: "Сидя на скамье, поясница прижата к спинке. По ходу подъёма доворачиваешь кисть мизинцем вверх (супинация). Локоть у корпуса, вниз медленно.",
+  },
+  {
     id: "shrug",
     nameRu: "Шраги",
     nameEn: "shrug",

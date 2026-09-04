@@ -62,7 +62,7 @@ const NAME_MAP: [string, string][] = [
   ["dumbbell hammer curls", "hammer-curl"],
   ["dumbbell hammer", "hammer-curl"],
   ["hammer curl", "hammer-curl"],
-  ["biceps", "hammer-curl"],
+  ["biceps", "db-curl-seated"], // Григорий: сгибания гантелей сидя с доворотом
   ["face pulls", "face-pull"],
   ["face pull", "face-pull"],
   ["upper push chest", "machine-chest-press"],
@@ -74,17 +74,14 @@ const NAME_MAP: [string, string][] = [
   ["t-bar", "t-bar-row"],
 ];
 
-/* «biceps», «glute» — сомнительные, помечаем в отчёте */
-const FLAG_NAMES = new Set(["biceps", "glute"]);
-
 interface ParsedSet {
   weight: number;
   reps: number;
 }
 interface ParsedExercise {
   raw: string;
+  srcName: string; // что сматчилось из NAME_MAP
   slug: string | null;
-  flagged: boolean;
   sets: ParsedSet[];
   warn: string | null;
 }
@@ -123,14 +120,14 @@ function parseSets(spec: string): { sets: ParsedSet[]; warn: string | null } {
   const num = "(\\d+(?:[.,]\\d+)?)";
   const n = (x: string) => parseFloat(x.replace(",", "."));
 
-  // 1) «вес kg reps*N»  или  «reps*N» после kg
-  let m = s.match(new RegExp(`${num}\\s*kg[\\s,]+${num}\\s*[*x]\\s*(\\d+)`, "i"));
+  // 1) «вес kg reps*N» — только если это ВСЯ строка (иначе первые подходы теряются)
+  let m = s.match(new RegExp(`^${num}\\s*kg[\\s,]+${num}\\s*[*x]\\s*(\\d+)$`, "i"));
   if (m) {
     const [w, r, cnt] = [n(m[1]!), n(m[2]!), parseInt(m[3]!, 10)];
     return { sets: Array.from({ length: cnt }, () => ({ weight: w, reps: r })), warn: null };
   }
-  // 1b) «вес kg *N» (повторы неизвестны)
-  m = s.match(new RegExp(`${num}\\s*kg\\s*[*x]\\s*(\\d+)`, "i"));
+  // 1b) «вес kg *N» (повторы неизвестны) — вся строка
+  m = s.match(new RegExp(`^${num}\\s*kg\\s*[*x]\\s*(\\d+)$`, "i"));
   if (m) {
     const [w, cnt] = [n(m[1]!), parseInt(m[2]!, 10)];
     return {
@@ -139,7 +136,7 @@ function parseSets(spec: string): { sets: ParsedSet[]; warn: string | null } {
     };
   }
   // 2) «вес kg, N подходов, в среднем R»
-  m = s.match(new RegExp(`${num}\\s*kg[\\s,]+(\\d+)\\s*подход[а-я]*[\\s,]+в среднем\\s+(\\d+)`, "i"));
+  m = s.match(new RegExp(`^${num}\\s*kg[\\s,]+(\\d+)\\s*подход[а-я]*[\\s,]+в среднем\\s+(\\d+)`, "i"));
   if (m) {
     const [w, cnt, r] = [n(m[1]!), parseInt(m[2]!, 10), n(m[3]!)];
     return { sets: Array.from({ length: cnt }, () => ({ weight: w, reps: r })), warn: null };
@@ -163,8 +160,17 @@ function parseSets(spec: string): { sets: ParsedSet[]; warn: string | null } {
   let warn: string | null = null;
 
   for (const part of parts) {
+    // «вес kg reps*N» внутри строки («90 kg 12*3» после «80 kg 12,»)
+    let mm = part.match(new RegExp(`^${num}\\s*kg\\s+${num}\\s*[*x]\\s*(\\d+)$`, "i"));
+    if (mm) {
+      curW = n(mm[1]!);
+      curR = n(mm[2]!);
+      const cnt = parseInt(mm[3]!, 10);
+      for (let k = 0; k < cnt; k++) sets.push({ weight: curW, reps: curR });
+      continue;
+    }
     // «reps вес kg»  (Pec Deck: «12 45 kg»)
-    let mm = part.match(new RegExp(`^${num}\\s+${num}\\s*kg$`, "i"));
+    mm = part.match(new RegExp(`^${num}\\s+${num}\\s*kg$`, "i"));
     if (mm) {
       curR = n(mm[1]!);
       curW = n(mm[2]!);
@@ -213,16 +219,23 @@ function parseSets(spec: string): { sets: ParsedSet[]; warn: string | null } {
   return { sets, warn };
 }
 
-function matchName(line: string): { slug: string | null; rest: string; name: string; flagged: boolean } {
+function matchName(line: string): { slug: string | null; rest: string; name: string } {
   const low = line.toLowerCase();
   for (const [pat, slug] of NAME_MAP) {
     const i = low.indexOf(pat);
     if (i === 0 || (i > 0 && i <= 2)) {
       const rest = line.slice(low.indexOf(pat) + pat.length);
-      return { slug, rest, name: pat, flagged: FLAG_NAMES.has(pat) };
+      return { slug, rest, name: pat };
     }
   }
-  return { slug: null, rest: line, name: "", flagged: false };
+  return { slug: null, rest: line, name: "" };
+}
+
+/** median по массиву чисел */
+function median(xs: number[]): number {
+  const s = [...xs].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m]! : (s[m - 1]! + s[m]!) / 2;
 }
 
 const CARDIO_RE = /(^бег|^велик|^велосипед|горка|сопротивлен)/i;
@@ -257,11 +270,11 @@ function parse(): ParsedSession[] {
         sess.note.push(line);
         continue;
       }
-      const { slug, rest, flagged } = matchName(line);
+      const { slug, rest, name } = matchName(line);
       if (!slug) {
         if (!/\d/.test(line)) sess.note.push(line);
         else {
-          sess.exercises.push({ raw: line, slug: null, flagged: false, sets: [], warn: "не опознал упражнение" });
+          sess.exercises.push({ raw: line, srcName: "", slug: null, sets: [], warn: "не опознал упражнение" });
           warnings.push(`${date}: не опознал "${line}"`);
         }
         continue;
@@ -269,25 +282,87 @@ function parse(): ParsedSession[] {
       if (!KNOWN_SLUGS.has(slug)) warnings.push(`${date}: слаг ${slug} нет в каталоге`);
       const { sets, warn } = parseSets(rest);
       if (warn) warnings.push(`${date} · ${slug}: ${warn}  ← "${line}"`);
-      if (flagged) warnings.push(`${date} · ${slug}: сомнительный маппинг названия ← "${line}"`);
-      sess.exercises.push({ raw: line, slug, flagged, sets, warn });
+      sess.exercises.push({ raw: line, srcName: name, slug, sets, warn });
     }
 
-    // склейка одинаковых слагов в одной сессии (Glute + Hip abduction)
-    const bySlug = new Map<string, ParsedExercise[]>();
+    // «Glute» = то из отведения/сведения, что НЕ названо явно в этот день
+    // (Григорий: делает и то, и другое). 03.05: Glute + Hip abduction → Glute = сведение.
+    const named = new Set(sess.exercises.filter((e) => e.srcName !== "glute").map((e) => e.slug));
+    for (const ex of sess.exercises) {
+      if (ex.srcName !== "glute") continue;
+      if (named.has("hip-abduction") && !named.has("hip-adduction")) {
+        ex.slug = "hip-adduction";
+        warnings.push(`${date}: «Glute» → hip-adduction (в этот день явно назван hip-abduction)`);
+      } else if (named.has("hip-adduction") && !named.has("hip-abduction")) {
+        ex.slug = "hip-abduction";
+        warnings.push(`${date}: «Glute» → hip-abduction (в этот день явно назван hip-adduction)`);
+      } else {
+        warnings.push(`${date}: «Glute» оставлен как ${ex.slug} — уточнить`);
+      }
+    }
+
+    const dup = new Map<string, number>();
     for (const ex of sess.exercises) {
       if (!ex.slug) continue;
-      const a = bySlug.get(ex.slug) ?? [];
-      a.push(ex);
-      bySlug.set(ex.slug, a);
+      dup.set(ex.slug, (dup.get(ex.slug) ?? 0) + 1);
     }
-    for (const [slug, arr] of bySlug) {
-      if (arr.length > 1) warnings.push(`${date}: ${slug} встречается ${arr.length}× — подходы склеятся`);
+    for (const [slug, cnt] of dup) {
+      if (cnt > 1) warnings.push(`${date}: ${slug} встречается ${cnt}× — подходы склеятся`);
     }
 
     out.push(sess);
   }
+
+  backfillEmpty(out);
   return out;
+}
+
+/** Строки с названием без чисел → медиана веса/повторов/числа подходов
+ *  по остальным вхождениям этого упражнения в истории (просьба Григория). */
+function backfillEmpty(sessions: ParsedSession[]): void {
+  const stat = new Map<string, { w: number[]; r: number[]; c: number[] }>();
+  for (const s of sessions) {
+    for (const ex of s.exercises) {
+      if (!ex.slug || !ex.sets.length) continue;
+      const st = stat.get(ex.slug) ?? { w: [], r: [], c: [] };
+      for (const set of ex.sets) {
+        if (set.weight > 0) st.w.push(set.weight);
+        if (set.reps > 0) st.r.push(set.reps);
+      }
+      st.c.push(ex.sets.length);
+      stat.set(ex.slug, st);
+    }
+  }
+  for (const s of sessions) {
+    for (const ex of s.exercises) {
+      if (!ex.slug) continue;
+      const st = stat.get(ex.slug);
+
+      // строка без подходов — целиком из медианы
+      if (!ex.sets.length) {
+        if (!st || !st.r.length) {
+          warnings.push(`${s.date} · ${ex.slug}: нет истории для среднего — строка выпадет`);
+          continue;
+        }
+        const w = st.w.length ? Math.round(median(st.w) * 2) / 2 : 0;
+        const r = Math.round(median(st.r));
+        const c = Math.max(1, Math.round(median(st.c)));
+        ex.sets = Array.from({ length: c }, () => ({ weight: w, reps: r }));
+        ex.warn = "средние по истории";
+        warnings.push(`${s.date} · ${ex.slug}: подставил среднее ${w > 0 ? `${w}кг × ` : ""}${r} × ${c}`);
+        continue;
+      }
+
+      // подходы есть, но повторы не записаны (`12.5 kg *4`) — повторы из медианы
+      if (st && st.r.length && ex.sets.some((x) => x.reps === 0)) {
+        const r = Math.round(median(st.r));
+        ex.sets.forEach((x) => {
+          if (x.reps === 0) x.reps = r;
+        });
+        warnings.push(`${s.date} · ${ex.slug}: повторы не записаны → медиана ${r}`);
+      }
+    }
+  }
 }
 
 /* ── main ── */
