@@ -21,6 +21,7 @@ const TABLES = {
   sessions: schema.sessions,
   sessionExercises: schema.sessionExercises,
   setLogs: schema.setLogs,
+  bodyLogs: schema.bodyLogs,
 } as const;
 
 type TableName = keyof typeof TABLES;

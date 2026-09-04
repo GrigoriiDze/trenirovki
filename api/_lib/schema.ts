@@ -119,6 +119,33 @@ export const setLogs = pgTable(
   ],
 );
 
+/* Замеры тела — зеркало src/db/schema.ts BodyLog. Обхваты в см (numeric),
+   любое поле nullable — в этом замере не мерил. */
+export const bodyLogs = pgTable(
+  "body_logs",
+  {
+    id: text("id").primaryKey(),
+    date: bigint("date", { mode: "number" }).notNull(),
+    note: text("note"),
+    weight: numeric("weight", { mode: "number" }),
+    neck: numeric("neck", { mode: "number" }),
+    shoulders: numeric("shoulders", { mode: "number" }),
+    chest: numeric("chest", { mode: "number" }),
+    bicepsL: numeric("biceps_l", { mode: "number" }),
+    bicepsR: numeric("biceps_r", { mode: "number" }),
+    forearm: numeric("forearm", { mode: "number" }),
+    wrist: numeric("wrist", { mode: "number" }),
+    waist: numeric("waist", { mode: "number" }),
+    hips: numeric("hips", { mode: "number" }),
+    thigh: numeric("thigh", { mode: "number" }),
+    calf: numeric("calf", { mode: "number" }),
+    ankle: numeric("ankle", { mode: "number" }),
+    updatedAt: bigint("updated_at", { mode: "number" }).notNull(),
+    deleted: boolean("deleted").notNull().default(false),
+  },
+  (t) => [index("body_logs_date").on(t.date)],
+);
+
 export const SYNC_TABLES = [
   "exercises",
   "programVersions",
@@ -126,5 +153,6 @@ export const SYNC_TABLES = [
   "sessions",
   "sessionExercises",
   "setLogs",
+  "bodyLogs",
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];

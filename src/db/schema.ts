@@ -146,6 +146,64 @@ export interface SetLog extends Synced {
   loggedAt: number;
 }
 
+/** Замер тела. Григорий ведёт обхваты сантиметром (см), вес не ведёт —
+ *  поле опциональное. Бицепс раздельно L/R — асимметрия реальна (37/38).
+ *  Набор полей фиксирован (context/08), «на вырост» не добавляем.
+ *  Любое поле null — в этом замере не мерил. */
+export const BODY_FIELDS = [
+  "weight",
+  "neck",
+  "shoulders", // фронтальная ширина плеч, не обхват
+  "chest",
+  "bicepsL",
+  "bicepsR",
+  "forearm",
+  "wrist",
+  "waist",
+  "hips", // таз вместе с ягодицами
+  "thigh",
+  "calf",
+  "ankle",
+] as const;
+export type BodyField = (typeof BODY_FIELDS)[number];
+
+export interface BodyLog extends Synced {
+  id: string;   // uuid
+  date: number; // epoch ms — дата замера (не создание строки)
+  note: string | null;
+  weight: number | null;    // кг
+  neck: number | null;
+  shoulders: number | null;
+  chest: number | null;
+  bicepsL: number | null;
+  bicepsR: number | null;
+  forearm: number | null;
+  wrist: number | null;
+  waist: number | null;
+  hips: number | null;
+  thigh: number | null;
+  calf: number | null;
+  ankle: number | null;
+}
+
+/** Русские подписи + единица. shoulders/hips — с пояснением, иначе через
+ *  полгода непонятно, что мерил (см. context/08). */
+export const BODY_LABELS: Record<BodyField, string> = {
+  weight: "Вес",
+  neck: "Шея",
+  shoulders: "Плечевой пояс",
+  chest: "Грудь",
+  bicepsL: "Бицепс левый",
+  bicepsR: "Бицепс правый",
+  forearm: "Предплечье",
+  wrist: "Запястье",
+  waist: "Живот",
+  hips: "Таз",
+  thigh: "Бедро",
+  calf: "Голень",
+  ankle: "Лодыжка",
+};
+
 /** Закладки синхронизации. Одна строка, id = "sync". */
 export interface SyncMeta {
   id: string;
@@ -159,6 +217,7 @@ export const db = new Dexie("trenirovki") as Dexie & {
   sessions: EntityTable<Session, "id">;
   sessionExercises: EntityTable<SessionExercise, "id">;
   setLogs: EntityTable<SetLog, "id">;
+  bodyLogs: EntityTable<BodyLog, "id">;
   syncMeta: EntityTable<SyncMeta, "id">;
 };
 
@@ -296,6 +355,11 @@ db.version(6).stores({}).upgrade(async (tx) => {
   });
 });
 
+// v7: bodyLogs — замеры тела (план 03, этап F).
+db.version(7).stores({
+  bodyLogs: "id, date, updatedAt",
+});
+
 /** Имена синхронизируемых таблиц (без syncMeta). */
 export const SYNC_TABLES = [
   "exercises",
@@ -304,5 +368,6 @@ export const SYNC_TABLES = [
   "sessions",
   "sessionExercises",
   "setLogs",
+  "bodyLogs",
 ] as const;
 export type SyncTableName = (typeof SYNC_TABLES)[number];

@@ -12,6 +12,7 @@ interface Props {
   onResume: () => void;
   onOpenDiary: () => void;
   onOpenProgress: () => void;
+  onOpenBody: () => void;
 }
 
 const TODAY_FMT = new Intl.DateTimeFormat("ru-RU", {
@@ -38,6 +39,7 @@ export function Home({
   onResume,
   onOpenDiary,
   onOpenProgress,
+  onOpenBody,
 }: Props) {
   const sl = syncLabel(sync);
   return (
@@ -70,10 +72,9 @@ export function Home({
         <button class="tile tile--on" onClick={onOpenProgress}>
           <span class="tile__name">Прогресс</span>
         </button>
-        <div class="tile" aria-disabled="true">
+        <button class="tile tile--on" onClick={onOpenBody}>
           <span class="tile__name">Тело</span>
-          <span class="tile__soon">скоро</span>
-        </div>
+        </button>
       </nav>
 
       <p class={`home__sync home__sync--${sl.tone}`}>{sl.text}</p>

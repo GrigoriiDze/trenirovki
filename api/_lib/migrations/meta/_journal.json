@@ -29,6 +29,13 @@
       "when": 1788519057325,
       "tag": "0003_nappy_turbo",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788523674383,
+      "tag": "0004_blushing_mentor",
+      "breakpoints": true
     }
   ]
 }

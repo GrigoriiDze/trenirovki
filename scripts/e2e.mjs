@@ -148,6 +148,21 @@ await page.waitForSelector(".prog");
 const bars = await page.locator(".bar").count();
 step(12, `прогресс: ${bars} групп мышц в объёме`);
 await page.screenshot({ path: `${OUT}/e2e-progress${SUF}.png` });
+await page.click(".prog__back");
+await page.waitForSelector(".home");
+
+// тело: записать замер
+await page.click(".tile--on:has-text('Тело')");
+await page.waitForSelector(".body");
+await page.click(".body__add");
+await page.waitForSelector(".mform");
+await page.locator(".rstep").first().locator(".rstep__btn").last().click({ clickCount: 3 });
+await page.screenshot({ path: `${OUT}/e2e-body-form${SUF}.png` });
+await page.click(".body__save");
+await page.waitForSelector(".mlist");
+const mrows = await page.locator(".mrow").count();
+step(13, `тело: замер сохранён, ${mrows} полей`);
+await page.screenshot({ path: `${OUT}/e2e-body${SUF}.png` });
 
 await browser.close();
 console.log(errs.length ? "ОШИБКИ:\n" + errs.join("\n") : "✓ ошибок консоли нет");
